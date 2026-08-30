@@ -4,7 +4,7 @@
         if (el) el.remove();
     });
 
-    let licenseKey = "Alvi1234";
+    let licenseKey = "ALVI-SSHECK";
     let logoUrl = "https://i.ibb.co/35vKSFyz/image.jpg";
     
     let isDataHacked = false; 
@@ -147,6 +147,29 @@
         isDataHacked = true;
     };
 
+    let candleData = { green: 0, red: 0 };
+    let liveTracker = null;
+
+    function startMarketAnalysis() {
+        candleData = { green: 0, red: 0 };
+        liveTracker = setInterval(() => {
+            let svgElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot'], svg g");
+            svgElements.forEach(el => {
+                let fill = (el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '').toLowerCase();
+                let className = (el.getAttribute('class') || '').toLowerCase();
+                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
+                    candleData.green += 1;
+                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
+                    candleData.red += 1;
+                }
+            });
+        }, 30);
+    }
+
+    function stopMarketAnalysis() {
+        if (liveTracker) clearInterval(liveTracker);
+    }
+
     function triggerScan(durationSec, callback) {
         scanOverlay.style.display = 'flex';
         let progressBar = document.getElementById('ss_progress_bar');
@@ -161,6 +184,8 @@
             "[EXPLOIT] Port bypass: Orderbook tickers...",
             "[SIGNAL] High-frequency signals aligned..."
         ];
+
+        startMarketAnalysis();
 
         let logIdx = 0;
         let matrixInterval = setInterval(() => {
@@ -179,6 +204,7 @@
             if (elapsed >= durationSec) {
                 clearInterval(progressInterval);
                 clearInterval(matrixInterval);
+                stopMarketAnalysis();
                 scanOverlay.style.display = 'none';
                 progressBar.style.width = '0%';
                 matrixText.innerHTML = '';
@@ -189,35 +215,70 @@
         }, 50);
     }
 
-    function executeTrade(direction) {
-        let allElements = Array.from(document.querySelectorAll('button, div, a, span, input'));
+    function getSelectedTimerDuration() {
+        let timerInput = document.querySelector('input[name="time"], input[placeholder*="Time"], .timer-value, div[class*="timer"]');
+        if (timerInput && timerInput.value) {
+            let timeStr = timerInput.value;
+            let parts = timeStr.split(':');
+            if (parts.length === 3) return (parseInt(parts[0]) * 3600) + (parseInt(parts[1]) * 60) + parseInt(parts[2]);
+            if (parts.length === 2) return (parseInt(parts[0]) * 60) + parseInt(parts[1]);
+            return parseInt(timeStr) || 5;
+        }
+        return 5; 
+    }
+
+    function clickElementByEvents(targetBtn) {
+        if (!targetBtn) return;
+        ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click'].forEach(eventType => {
+            let rect = targetBtn.getBoundingClientRect();
+            let evt = new PointerEvent(eventType, {
+                bubbles: true,
+                cancelable: true,
+                view: window,
+                clientX: rect.left + rect.width / 2,
+                clientY: rect.top + rect.height / 2,
+                pointerId: 1,
+                pointerType: 'touch'
+            });
+            targetBtn.dispatchEvent(evt);
+        });
+    }
+
+    function executeTrade() {
+        let direction = "UP";
+        if (candleData.red > candleData.green) {
+            direction = "DOWN";
+        } else if (candleData.green === candleData.red) {
+            direction = (new Date().getMilliseconds() % 2 === 0) ? "UP" : "DOWN";
+        }
+
+        let selectors = [
+            'button', 
+            'div[role="button"]', 
+            'div[class*="btn"]', 
+            'div[class*="button"]',
+            'a[class*="btn"]'
+        ];
+        
+        let allElements = Array.from(document.querySelectorAll(selectors.join(',')));
         let targetBtn = null;
 
         if (direction === "UP") {
             targetBtn = allElements.find(el => {
                 let text = (el.innerText || el.textContent || "").trim().toLowerCase();
                 let cls = (el.className || "").toString().toLowerCase();
-                return (text === "up" || text.includes("call") || cls.includes("btn-green") || cls.includes("button-call") || cls.includes("call")) && el.offsetWidth > 0;
+                return (text === "up" || text.includes("call") || text.includes("কল") || cls.includes("btn-green") || cls.includes("button-call") || cls.includes("call") || cls.includes("up")) && el.offsetWidth > 0;
             });
         } else {
             targetBtn = allElements.find(el => {
                 let text = (el.innerText || el.textContent || "").trim().toLowerCase();
                 let cls = (el.className || "").toString().toLowerCase();
-                return (text === "down" || text.includes("put") || cls.includes("btn-red") || cls.includes("button-put") || cls.includes("put")) && el.offsetWidth > 0;
+                return (text === "down" || text.includes("put") || text.includes("পুট") || cls.includes("btn-red") || cls.includes("button-put") || cls.includes("put") || cls.includes("down")) && el.offsetWidth > 0;
             });
         }
 
         if (targetBtn) {
-            targetBtn.click();
-            let rect = targetBtn.getBoundingClientRect();
-            let clickEvent = new MouseEvent('click', {
-                view: window,
-                bubbles: true,
-                cancelable: true,
-                clientX: rect.left + rect.width / 2,
-                clientY: rect.top + rect.height / 2
-            });
-            targetBtn.dispatchEvent(clickEvent);
+            clickElementByEvents(targetBtn);
         }
     }
 
@@ -241,10 +302,12 @@
                 doneModal.style.display = 'block';
             });
         } else {
-            triggerScan(5, function () {
-                let currentSecond = new Date().getSeconds();
-                let selectedSignal = (currentSecond % 2 === 0) ? "UP" : "DOWN";
-                executeTrade(selectedSignal);
+            let scanTime = getSelectedTimerDuration();
+            if (scanTime < 2) scanTime = 3;
+            if (scanTime > 10) scanTime = 5;
+
+            triggerScan(scanTime, function () {
+                executeTrade();
             });
         }
     });
