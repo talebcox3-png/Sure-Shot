@@ -4,8 +4,8 @@
         if (el) el.remove();
     });
 
-    let licenseKey = "ALVI-SSHECK";
-    let logoUrl = "https://i.ibb.co/35vKSFyz/image.jpg";
+    let licenseKey = "Alvi1234";
+    let logoUrl = "https://ibb.co.com/tT80gVR0";
     
     let isDataHacked = false; 
     let isScanning = false;
@@ -16,13 +16,13 @@
             width: 65px; height: 65px;
             background: url('${logoUrl}') center/cover no-repeat;
             border-radius: 50%;
-            border: 2px solid #00ff66;
-            box-shadow: 0 0 15px #00ff66;
-            transition: transform 0.3s ease;
+            border: none !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6), 0 0 12px rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         #sureshot-logo-icon.active-scan {
-            transform: scale(1.1);
-            box-shadow: 0 0 25px #00ff66;
+            transform: scale(1.08);
+            box-shadow: 0 0 20px rgba(0, 255, 102, 0.5), 0 0 10px rgba(255, 255, 255, 0.4);
         }
     `;
     document.head.appendChild(style);
@@ -35,7 +35,7 @@
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
         width: 320px; background: #080f0a; border: 1.5px solid #00ff66;
         color: #ffffff; padding: 30px 24px; border-radius: 20px;
-        box-shadow: 0 0 30px rgba(0,255,102,0.3); z-index: 999999;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(0,255,102,0.2); z-index: 999999;
         font-family: Arial, sans-serif; text-align: center;
         display: ${isLoggedIn ? 'none' : 'block'};
     `;
@@ -43,7 +43,7 @@
         <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px;">QX999 Login</h3>
         <p style="font-size:13px; color:#aaaaaa; margin:0 0 20px 0;">Enter password to continue</p>
         <input type="password" id="ss_pass" placeholder="••••••••" style="width:100%; padding:12px; background:#040805; color:#fff; border:1px solid #11331a; border-radius:10px; box-sizing:border-box; margin-bottom:18px; font-size:16px; outline:none; text-align:center;">
-        <button id="ss_login_btn" style="width:100%; padding:12px; background:#00ff66; color:#000000; border:none; border-radius:10px; font-weight:bold; font-size:16px; cursor:pointer; box-shadow:0 0 10px #00ff66;">Enter</button>
+        <button id="ss_login_btn" style="width:100%; padding:12px; background:#00ff66; color:#000000; border:none; border-radius:10px; font-weight:bold; font-size:16px; cursor:pointer; box-shadow:0 4px 10px rgba(0,255,102,0.4);">Enter</button>
     `;
     document.body.appendChild(loginBox);
 
@@ -60,10 +60,10 @@
 
     let logoText = document.createElement('span');
     logoText.style.cssText = `
-        color: #00ff66; font-weight: bold; font-size: 13px; margin-top: 6px;
-        text-shadow: 0 2px 4px #000000; font-family: Arial, sans-serif; letter-spacing: 1px;
+        color: #ffffff; font-weight: 800; font-size: 11px; margin-top: 6px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.9); font-family: sans-serif; letter-spacing: 1.5px;
     `;
-    logoText.innerText = "QX999";
+    logoText.innerText = "SURESHOT";
 
     botContainer.appendChild(logoIcon);
     botContainer.appendChild(logoText);
@@ -103,25 +103,29 @@
     scanOverlay.id = 'sureshot-scan-canvas';
     scanOverlay.style.cssText = `
         position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(5, 12, 8, 0.92); z-index: 999998; display: none;
+        background: rgba(3, 8, 5, 0.94); z-index: 999998; display: none;
         flex-direction: column; justify-content: center; align-items: center;
         font-family: monospace; color: #00ff66; box-sizing: border-box; padding: 20px;
     `;
     
     scanOverlay.innerHTML = `
-        <div id="ss_matrix_text" style="position:absolute; top:20px; left:20px; font-size:11px; color:rgba(0,255,102,0.4); text-align:left; line-height:1.4;"></div>
-        <div style="position:relative; width:180px; height:180px; display:flex; justify-content:center; align-items:center;">
-            <div style="position:absolute; width:100%; height:100%; border:3px solid transparent; border-top:3px solid #00ff66; border-bottom:3px solid #00ff66; border-radius:50%; animation: spin 1.5s linear infinite;"></div>
-            <div style="position:absolute; width:70%; height:70%; border:2px solid transparent; border-left:2px solid #00ff66; border-right:2px solid #00ff66; border-radius:50%; animation: spinRev 1s linear infinite;"></div>
-            <div style="font-size:28px;">⚡</div>
+        <div id="ss_matrix_text" style="position:absolute; top:25px; left:20px; font-size:11px; color:rgba(0,255,102,0.5); text-align:left; line-height:1.5; font-family:monospace;"></div>
+        <div style="position:relative; width:200px; height:200px; display:flex; justify-content:center; align-items:center;">
+            <div style="position:absolute; width:100%; height:100%; border:1px solid rgba(0,255,102,0.2); border-radius:50%;"></div>
+            <div style="position:absolute; width:70%; height:70%; border:1px dashed rgba(0,255,102,0.4); border-radius:50%;"></div>
+            <div style="position:absolute; width:40%; height:40%; border:1px solid rgba(0,255,102,0.3); border-radius:50%;"></div>
+            <div style="position:absolute; width:100%; height:100%; border-radius:50%; background: conic-gradient(from 0deg, rgba(0,255,102,0.4), transparent 60%); animation: radarSweep 1.8s linear infinite;"></div>
+            <div style="font-size:22px; z-index:2; text-shadow:0 0 10px #00ff66;">🌐</div>
         </div>
-        <div id="ss_status_text" style="margin-top:30px; font-size:16px; font-weight:bold; letter-spacing:2px; text-shadow:0 0 8px #00ff66;">DECRYPTING MARKET DATA FLOW...</div>
-        <div style="width:240px; height:6px; background:#112215; border-radius:3px; margin-top:15px; overflow:hidden; border:1px solid #00ff66;">
-            <div id="ss_progress_bar" style="width:0%; height:100%; background:#00ff66; box-shadow:0 0 10px #00ff66; transition:width 0.1s linear;"></div>
+
+        <div id="ss_status_text" style="margin-top:35px; font-size:15px; font-weight:bold; letter-spacing:2px; text-shadow:0 0 8px #00ff66;">ANALYZING MARKET LIQUIDITY...</div>
+        
+        <div style="width:260px; height:8px; background:#08140c; border-radius:4px; margin-top:18px; overflow:hidden; border:1px solid rgba(0,255,102,0.5);">
+            <div id="ss_progress_bar" style="width:0%; height:100%; background:#00ff66; box-shadow:0 0 12px #00ff66; transition:width 0.1s linear;"></div>
         </div>
+
         <style>
-            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-            @keyframes spinRev { 0% { transform: rotate(0deg); } 100% { transform: rotate(-360deg); } }
+            @keyframes radarSweep { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         </style>
     `;
     document.body.appendChild(scanOverlay);
@@ -132,12 +136,12 @@
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
         width: 280px; background: #080f0a; border: 1.5px solid #00ff66;
         color: #ffffff; padding: 25px 20px; border-radius: 18px;
-        box-shadow: 0 0 25px rgba(0,255,102,0.4); z-index: 999999;
+        box-shadow: 0 0 30px rgba(0,255,102,0.3); z-index: 999999;
         font-family: Arial, sans-serif; text-align: center; display: none;
     `;
     doneModal.innerHTML = `
         <h4 style="margin:0 0 10px 0; color:#00ff66; font-size:18px;">PROCESS COMPLETE</h4>
-        <p style="font-size:12px; color:#cccccc; margin:0 0 20px 0;">Market Data Hacked Successfully</p>
+        <p style="font-size:12px; color:#cccccc; margin:0 0 20px 0;">Market Data Synchronized Successfully</p>
         <button id="ss_done_btn" style="width:100%; padding:10px; background:#00ff66; color:#000000; border:none; border-radius:8px; font-weight:bold; font-size:15px; cursor:pointer;">DONE</button>
     `;
     document.body.appendChild(doneModal);
@@ -176,13 +180,11 @@
         let matrixText = document.getElementById('ss_matrix_text');
         
         let logs = [
-            "[EXPLOIT] Injecting System Entrypoint...",
-            "[SECURE] Bypassing cloud security thread...",
-            "[SIGNAL] Target execution payload loaded...",
-            "[SYS] Market trend dynamics calculating...",
-            "[DECRYPT] Bypassing threshold alignment...",
-            "[EXPLOIT] Port bypass: Orderbook tickers...",
-            "[SIGNAL] High-frequency signals aligned..."
+            "[SYSTEM] Injecting Entrypoint Verification...",
+            "[DECRYPT] Bypassing Cloudflare Latency Payload...",
+            "[ANALYSIS] Reading Orderbook Tickers & Dynamic Trend...",
+            "[ALGORITHM] Evaluating Price Action & RSI Volatility...",
+            "[SIGNAL] High Frequency Entry Point Re-alignment..."
         ];
 
         startMarketAnalysis();
@@ -222,9 +224,9 @@
             let parts = timeStr.split(':');
             if (parts.length === 3) return (parseInt(parts[0]) * 3600) + (parseInt(parts[1]) * 60) + parseInt(parts[2]);
             if (parts.length === 2) return (parseInt(parts[0]) * 60) + parseInt(parts[1]);
-            return parseInt(timeStr) || 5;
+            return parseInt(timeStr) || 4;
         }
-        return 5; 
+        return 4; 
     }
 
     function clickElementByEvents(targetBtn) {
@@ -267,13 +269,13 @@
             targetBtn = allElements.find(el => {
                 let text = (el.innerText || el.textContent || "").trim().toLowerCase();
                 let cls = (el.className || "").toString().toLowerCase();
-                return (text === "up" || text.includes("call") || text.includes("কল") || cls.includes("btn-green") || cls.includes("button-call") || cls.includes("call") || cls.includes("up")) && el.offsetWidth > 0;
+                return (text === "up" || text.includes("call") || cls.includes("btn-green") || cls.includes("button-call") || cls.includes("call") || cls.includes("up")) && el.offsetWidth > 0;
             });
         } else {
             targetBtn = allElements.find(el => {
                 let text = (el.innerText || el.textContent || "").trim().toLowerCase();
                 let cls = (el.className || "").toString().toLowerCase();
-                return (text === "down" || text.includes("put") || text.includes("পুট") || cls.includes("btn-red") || cls.includes("button-put") || cls.includes("put") || cls.includes("down")) && el.offsetWidth > 0;
+                return (text === "down" || text.includes("put") || cls.includes("btn-red") || cls.includes("button-put") || cls.includes("put") || cls.includes("down")) && el.offsetWidth > 0;
             });
         }
 
@@ -304,7 +306,7 @@
         } else {
             let scanTime = getSelectedTimerDuration();
             if (scanTime < 2) scanTime = 3;
-            if (scanTime > 10) scanTime = 5;
+            if (scanTime > 8) scanTime = 5;
 
             triggerScan(scanTime, function () {
                 executeTrade();
