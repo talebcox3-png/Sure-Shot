@@ -4,8 +4,8 @@
         if (el) el.remove();
     });
 
-    let licenseKey = "Alvi1234";
-    let logoUrl = "https://ibb.co.com/tT80gVR0";
+    let licenseKey = "ALVI-SSHECK;
+    let logoUrl = "https://ibb.co.com/tT80gVR0"; 
     
     let isDataHacked = false; 
     let isScanning = false;
@@ -13,16 +13,17 @@
     const style = document.createElement('style');
     style.innerHTML = `
         #sureshot-logo-icon {
-            width: 65px; height: 65px;
-            background: url('${logoUrl}') center/cover no-repeat;
+            width: 70px; 
+            height: 70px;
+            background: #0d131a url('${logoUrl}') center/cover no-repeat;
             border-radius: 50%;
             border: none !important;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6), 0 0 12px rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.75), 0 0 10px rgba(0, 0, 0, 0.5);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         #sureshot-logo-icon.active-scan {
-            transform: scale(1.08);
-            box-shadow: 0 0 20px rgba(0, 255, 102, 0.5), 0 0 10px rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.9), 0 0 15px rgba(255, 255, 255, 0.2);
         }
     `;
     document.head.appendChild(style);
@@ -35,15 +36,15 @@
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
         width: 320px; background: #080f0a; border: 1.5px solid #00ff66;
         color: #ffffff; padding: 30px 24px; border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(0,255,102,0.2); z-index: 999999;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(0,255,102,0.4); z-index: 999999;
         font-family: Arial, sans-serif; text-align: center;
         display: ${isLoggedIn ? 'none' : 'block'};
     `;
     loginBox.innerHTML = `
-        <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px;">QX999 Login</h3>
-        <p style="font-size:13px; color:#aaaaaa; margin:0 0 20px 0;">Enter password to continue</p>
+        <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px;">SURESHOT Access</h3>
+        <p style="font-size:13px; color:#aaaaaa; margin:0 0 20px 0;">Enter Password</p>
         <input type="password" id="ss_pass" placeholder="••••••••" style="width:100%; padding:12px; background:#040805; color:#fff; border:1px solid #11331a; border-radius:10px; box-sizing:border-box; margin-bottom:18px; font-size:16px; outline:none; text-align:center;">
-        <button id="ss_login_btn" style="width:100%; padding:12px; background:#00ff66; color:#000000; border:none; border-radius:10px; font-weight:bold; font-size:16px; cursor:pointer; box-shadow:0 4px 10px rgba(0,255,102,0.4);">Enter</button>
+        <button id="ss_login_btn" style="width:100%; padding:12px; background:#00ff66; color:#000000; border:none; border-radius:10px; font-weight:bold; font-size:16px; cursor:pointer; box-shadow:0 4px 10px rgba(0,255,102,0.4);">LOGIN</button>
     `;
     document.body.appendChild(loginBox);
 
@@ -60,8 +61,8 @@
 
     let logoText = document.createElement('span');
     logoText.style.cssText = `
-        color: #ffffff; font-weight: 800; font-size: 11px; margin-top: 6px;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.9); font-family: sans-serif; letter-spacing: 1.5px;
+        color: #ffffff; font-weight: 800; font-size: 13px; margin-top: 8px;
+        text-shadow: 0 2px 5px rgba(0,0,0,0.9); font-family: sans-serif; letter-spacing: 1.5px;
     `;
     logoText.innerText = "SURESHOT";
 
@@ -109,24 +110,17 @@
     `;
     
     scanOverlay.innerHTML = `
-        <div id="ss_matrix_text" style="position:absolute; top:25px; left:20px; font-size:11px; color:rgba(0,255,102,0.5); text-align:left; line-height:1.5; font-family:monospace;"></div>
+        <div id="ss_matrix_text" style="position:absolute; top:25px; left:20px; font-size:11px; color:rgba(0,255,102,0.7); text-align:left; line-height:1.5; font-family:monospace;"></div>
         <div style="position:relative; width:200px; height:200px; display:flex; justify-content:center; align-items:center;">
-            <div style="position:absolute; width:100%; height:100%; border:1px solid rgba(0,255,102,0.2); border-radius:50%;"></div>
-            <div style="position:absolute; width:70%; height:70%; border:1px dashed rgba(0,255,102,0.4); border-radius:50%;"></div>
-            <div style="position:absolute; width:40%; height:40%; border:1px solid rgba(0,255,102,0.3); border-radius:50%;"></div>
+            <div style="position:absolute; width:100%; height:100%; border:1px solid rgba(0,255,102,0.3); border-radius:50%;"></div>
             <div style="position:absolute; width:100%; height:100%; border-radius:50%; background: conic-gradient(from 0deg, rgba(0,255,102,0.4), transparent 60%); animation: radarSweep 1.8s linear infinite;"></div>
             <div style="font-size:22px; z-index:2; text-shadow:0 0 10px #00ff66;">🌐</div>
         </div>
-
-        <div id="ss_status_text" style="margin-top:35px; font-size:15px; font-weight:bold; letter-spacing:2px; text-shadow:0 0 8px #00ff66;">ANALYZING MARKET LIQUIDITY...</div>
-        
+        <div id="ss_status_text" style="margin-top:35px; font-size:15px; font-weight:bold; letter-spacing:2px; text-shadow:0 0 8px #00ff66;">ANALYZING MARKET DATA...</div>
         <div style="width:260px; height:8px; background:#08140c; border-radius:4px; margin-top:18px; overflow:hidden; border:1px solid rgba(0,255,102,0.5);">
             <div id="ss_progress_bar" style="width:0%; height:100%; background:#00ff66; box-shadow:0 0 12px #00ff66; transition:width 0.1s linear;"></div>
         </div>
-
-        <style>
-            @keyframes radarSweep { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        </style>
+        <style>@keyframes radarSweep { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
     `;
     document.body.appendChild(scanOverlay);
 
@@ -140,9 +134,9 @@
         font-family: Arial, sans-serif; text-align: center; display: none;
     `;
     doneModal.innerHTML = `
-        <h4 style="margin:0 0 10px 0; color:#00ff66; font-size:18px;">PROCESS COMPLETE</h4>
-        <p style="font-size:12px; color:#cccccc; margin:0 0 20px 0;">Market Data Synchronized Successfully</p>
-        <button id="ss_done_btn" style="width:100%; padding:10px; background:#00ff66; color:#000000; border:none; border-radius:8px; font-weight:bold; font-size:15px; cursor:pointer;">DONE</button>
+        <h4 style="margin:0 0 10px 0; color:#00ff66; font-size:18px;">ANALYSIS COMPLETE</h4>
+        <p style="font-size:12px; color:#cccccc; margin:0 0 20px 0;">Market indicators loaded.</p>
+        <button id="ss_done_btn" style="width:100%; padding:10px; background:#00ff66; color:#000000; border:none; border-radius:8px; font-weight:bold; font-size:15px; cursor:pointer;">START</button>
     `;
     document.body.appendChild(doneModal);
 
@@ -180,11 +174,10 @@
         let matrixText = document.getElementById('ss_matrix_text');
         
         let logs = [
-            "[SYSTEM] Injecting Entrypoint Verification...",
-            "[DECRYPT] Bypassing Cloudflare Latency Payload...",
-            "[ANALYSIS] Reading Orderbook Tickers & Dynamic Trend...",
-            "[ALGORITHM] Evaluating Price Action & RSI Volatility...",
-            "[SIGNAL] High Frequency Entry Point Re-alignment..."
+            "[SYSTEM] Fetching market stream...",
+            "[ANALYSIS] Reading recent candle structures...",
+            "[INDICATOR] Evaluating momentum signals...",
+            "[EXECUTION] Preparing order placement..."
         ];
 
         startMarketAnalysis();
@@ -217,70 +210,32 @@
         }, 50);
     }
 
-    function getSelectedTimerDuration() {
-        let timerInput = document.querySelector('input[name="time"], input[placeholder*="Time"], .timer-value, div[class*="timer"]');
-        if (timerInput && timerInput.value) {
-            let timeStr = timerInput.value;
-            let parts = timeStr.split(':');
-            if (parts.length === 3) return (parseInt(parts[0]) * 3600) + (parseInt(parts[1]) * 60) + parseInt(parts[2]);
-            if (parts.length === 2) return (parseInt(parts[0]) * 60) + parseInt(parts[1]);
-            return parseInt(timeStr) || 4;
-        }
-        return 4; 
-    }
-
-    function clickElementByEvents(targetBtn) {
-        if (!targetBtn) return;
-        ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click'].forEach(eventType => {
-            let rect = targetBtn.getBoundingClientRect();
-            let evt = new PointerEvent(eventType, {
-                bubbles: true,
-                cancelable: true,
-                view: window,
-                clientX: rect.left + rect.width / 2,
-                clientY: rect.top + rect.height / 2,
-                pointerId: 1,
-                pointerType: 'touch'
-            });
-            targetBtn.dispatchEvent(evt);
-        });
-    }
-
     function executeTrade() {
-        let direction = "UP";
-        if (candleData.red > candleData.green) {
-            direction = "DOWN";
-        } else if (candleData.green === candleData.red) {
-            direction = (new Date().getMilliseconds() % 2 === 0) ? "UP" : "DOWN";
-        }
+        let direction = candleData.red > candleData.green ? "DOWN" : "UP";
 
-        let selectors = [
-            'button', 
-            'div[role="button"]', 
-            'div[class*="btn"]', 
-            'div[class*="button"]',
-            'a[class*="btn"]'
-        ];
-        
+        let selectors = ['button', 'div[role="button"]', 'div[class*="btn"]', 'div[class*="button"]'];
         let allElements = Array.from(document.querySelectorAll(selectors.join(',')));
-        let targetBtn = null;
-
-        if (direction === "UP") {
-            targetBtn = allElements.find(el => {
-                let text = (el.innerText || el.textContent || "").trim().toLowerCase();
-                let cls = (el.className || "").toString().toLowerCase();
-                return (text === "up" || text.includes("call") || cls.includes("btn-green") || cls.includes("button-call") || cls.includes("call") || cls.includes("up")) && el.offsetWidth > 0;
-            });
-        } else {
-            targetBtn = allElements.find(el => {
-                let text = (el.innerText || el.textContent || "").trim().toLowerCase();
-                let cls = (el.className || "").toString().toLowerCase();
-                return (text === "down" || text.includes("put") || cls.includes("btn-red") || cls.includes("button-put") || cls.includes("put") || cls.includes("down")) && el.offsetWidth > 0;
-            });
-        }
+        
+        let targetBtn = allElements.find(el => {
+            let text = (el.innerText || el.textContent || "").trim().toLowerCase();
+            let cls = (el.className || "").toString().toLowerCase();
+            if (direction === "UP") {
+                return (text === "up" || text.includes("call") || cls.includes("green") || cls.includes("up")) && el.offsetWidth > 0;
+            } else {
+                return (text === "down" || text.includes("put") || cls.includes("red") || cls.includes("down")) && el.offsetWidth > 0;
+            }
+        });
 
         if (targetBtn) {
-            clickElementByEvents(targetBtn);
+            ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click'].forEach(eventType => {
+                let rect = targetBtn.getBoundingClientRect();
+                let evt = new PointerEvent(eventType, {
+                    bubbles: true, cancelable: true, view: window,
+                    clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2,
+                    pointerId: 1, pointerType: 'touch'
+                });
+                targetBtn.dispatchEvent(evt);
+            });
         }
     }
 
@@ -304,11 +259,7 @@
                 doneModal.style.display = 'block';
             });
         } else {
-            let scanTime = getSelectedTimerDuration();
-            if (scanTime < 2) scanTime = 3;
-            if (scanTime > 8) scanTime = 5;
-
-            triggerScan(scanTime, function () {
+            triggerScan(3, function () {
                 executeTrade();
             });
         }
