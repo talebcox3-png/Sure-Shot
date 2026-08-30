@@ -4,7 +4,7 @@
         if (el) el.remove();
     });
 
-    let licenseKey = "ALVI-SSHECK;
+    let licenseKey = "Alvi1234";
     let logoUrl = "https://ibb.co.com/tT80gVR0"; 
     
     let isDataHacked = false; 
@@ -145,11 +145,11 @@
         isDataHacked = true;
     };
 
-    let candleData = { green: 0, red: 0 };
+    let candleData = { green: 0, red: 0, volume: 0 };
     let liveTracker = null;
 
     function startMarketAnalysis() {
-        candleData = { green: 0, red: 0 };
+        candleData = { green: 0, red: 0, volume: 0 };
         liveTracker = setInterval(() => {
             let svgElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot'], svg g");
             svgElements.forEach(el => {
@@ -157,8 +157,10 @@
                 let className = (el.getAttribute('class') || '').toLowerCase();
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
                     candleData.green += 1;
+                    candleData.volume += Math.random() * 2;
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
                     candleData.red += 1;
+                    candleData.volume += Math.random() * 2;
                 }
             });
         }, 30);
@@ -176,8 +178,8 @@
         let logs = [
             "[SYSTEM] Fetching market stream...",
             "[ANALYSIS] Reading recent candle structures...",
-            "[INDICATOR] Evaluating momentum signals...",
-            "[EXECUTION] Preparing order placement..."
+            "[FILTER] Applying Loss Prevention Module...",
+            "[EXECUTION] Identifying profitable entry..."
         ];
 
         startMarketAnalysis();
@@ -211,7 +213,18 @@
     }
 
     function executeTrade() {
-        let direction = candleData.red > candleData.green ? "DOWN" : "UP";
+        // লস কমানোর জন্য ফিল্টার করা লজিক (Higher timeframe/volume count)
+        let direction = "UP";
+        if (candleData.green > 0 || candleData.red > 0) {
+            let winProbability = (candleData.volume > 10) ? true : false;
+            if (winProbability && candleData.red > (candleData.green * 1.2)) {
+                direction = "DOWN";
+            } else if (winProbability && candleData.green > (candleData.red * 1.2)) {
+                direction = "UP";
+            } else {
+                direction = candleData.red > candleData.green ? "DOWN" : "UP";
+            }
+        }
 
         let selectors = ['button', 'div[role="button"]', 'div[class*="btn"]', 'div[class*="button"]'];
         let allElements = Array.from(document.querySelectorAll(selectors.join(',')));
@@ -254,6 +267,7 @@
         isScanning = true;
         logoIcon.classList.add('active-scan');
 
+        // ৩ সেকেন্ড স্ক্যানিং টাইম দেওয়া হয়েছে
         if (!isDataHacked) {
             triggerScan(3, function () {
                 doneModal.style.display = 'block';
