@@ -9,9 +9,6 @@
     
     let isDataHacked = false; 
     let isScanning = false;
-    let greenForce = 0;
-    let redForce = 0;
-    let analysisTimer = null;
 
     const style = document.createElement('style');
     style.innerHTML = `
@@ -19,12 +16,13 @@
             width: 65px; height: 65px;
             background: url('${logoUrl}') center/cover no-repeat;
             border-radius: 50%;
-            border: none;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            border: 2px solid #00ff66;
+            box-shadow: 0 0 15px #00ff66;
             transition: transform 0.3s ease;
         }
         #sureshot-logo-icon.active-scan {
             transform: scale(1.1);
+            box-shadow: 0 0 25px #00ff66;
         }
     `;
     document.head.appendChild(style);
@@ -35,17 +33,17 @@
     loginBox.id = 'sureshot-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 320px; background: #0c150e; border: 1.5px solid #333333;
+        width: 320px; background: #080f0a; border: 1.5px solid #00ff66;
         color: #ffffff; padding: 30px 24px; border-radius: 20px;
-        box-shadow: 0 0 30px rgba(0,0,0,0.8); z-index: 999999;
+        box-shadow: 0 0 30px rgba(0,255,102,0.3); z-index: 999999;
         font-family: Arial, sans-serif; text-align: center;
         display: ${isLoggedIn ? 'none' : 'block'};
     `;
     loginBox.innerHTML = `
-        <h3 style="margin:0 0 6px 0; color:#ffffff; font-size:22px;">SURESHOT LOGIN</h3>
-        <p style="font-size:13px; color:#aaaaaa; margin:0 0 20px 0;">Enter License Key</p>
-        <input type="password" id="ss_pass" placeholder="••••••••" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #222; border-radius:10px; box-sizing:border-box; margin-bottom:18px; font-size:16px; outline:none; text-align:center;">
-        <button id="ss_login_btn" style="width:100%; padding:12px; background:#ffffff; color:#000000; border:none; border-radius:10px; font-weight:bold; font-size:16px; cursor:pointer;">ENTER</button>
+        <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px;">QX999 Login</h3>
+        <p style="font-size:13px; color:#aaaaaa; margin:0 0 20px 0;">Enter password to continue</p>
+        <input type="password" id="ss_pass" placeholder="••••••••" style="width:100%; padding:12px; background:#040805; color:#fff; border:1px solid #11331a; border-radius:10px; box-sizing:border-box; margin-bottom:18px; font-size:16px; outline:none; text-align:center;">
+        <button id="ss_login_btn" style="width:100%; padding:12px; background:#00ff66; color:#000000; border:none; border-radius:10px; font-weight:bold; font-size:16px; cursor:pointer; box-shadow:0 0 10px #00ff66;">Enter</button>
     `;
     document.body.appendChild(loginBox);
 
@@ -62,10 +60,10 @@
 
     let logoText = document.createElement('span');
     logoText.style.cssText = `
-        color: #ffffff; font-weight: bold; font-size: 13px; margin-top: 6px;
+        color: #00ff66; font-weight: bold; font-size: 13px; margin-top: 6px;
         text-shadow: 0 2px 4px #000000; font-family: Arial, sans-serif; letter-spacing: 1px;
     `;
-    logoText.innerText = "SURESHOT";
+    logoText.innerText = "QX999";
 
     botContainer.appendChild(logoIcon);
     botContainer.appendChild(logoText);
@@ -101,77 +99,46 @@
     botContainer.addEventListener('mousedown', dragStart);
     botContainer.addEventListener('touchstart', dragStart);
 
-    let scanCanvas = document.createElement('canvas');
-    scanCanvas.id = 'sureshot-scan-canvas';
-    scanCanvas.style.cssText = `
+    let scanOverlay = document.createElement('div');
+    scanOverlay.id = 'sureshot-scan-canvas';
+    scanOverlay.style.cssText = `
         position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-        pointer-events: none; z-index: 999998; display: none;
+        background: rgba(5, 12, 8, 0.92); z-index: 999998; display: none;
+        flex-direction: column; justify-content: center; align-items: center;
+        font-family: monospace; color: #00ff66; box-sizing: border-box; padding: 20px;
     `;
-    document.body.appendChild(scanCanvas);
-    let ctx = scanCanvas.getContext('2d');
-    function resizeCanvas() { scanCanvas.width = window.innerWidth; scanCanvas.height = window.innerHeight; }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    let scanAnimationId = null, scanY = 0, scanStartTime = 0, currentDurationSec = 3;
-
-    function startRealTimeAnalysis() {
-        greenForce = 0; redForce = 0;
-        analysisTimer = setInterval(() => {
-            let svgElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
-            svgElements.forEach(el => {
-                let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
-                let className = (el.getAttribute('class') || '').toLowerCase();
-                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
-                    greenForce += 2;
-                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
-                    redForce += 2;
-                }
-            });
-        }, 40);
-    }
-
-    function drawSmokeScanLine() {
-        let elapsedSec = (Date.now() - scanStartTime) / 1000;
-        if (elapsedSec >= currentDurationSec) {
-            finishScan();
-            return;
-        }
-
-        ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
-        let trailHeight = 150;
-        let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
-        grad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-        grad.addColorStop(1, 'rgba(255, 255, 255, 0.25)');
-
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, Math.max(0, scanY - trailHeight), scanCanvas.width, trailHeight);
-
-        ctx.beginPath();
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.moveTo(0, scanY);
-        ctx.lineTo(scanCanvas.width, scanY);
-        ctx.stroke();
-
-        scanY += 8;
-        if (scanY > scanCanvas.height) scanY = 0;
-        scanAnimationId = requestAnimationFrame(drawSmokeScanLine);
-    }
+    
+    scanOverlay.innerHTML = `
+        <div id="ss_matrix_text" style="position:absolute; top:20px; left:20px; font-size:11px; color:rgba(0,255,102,0.4); text-align:left; line-height:1.4;"></div>
+        <div style="position:relative; width:180px; height:180px; display:flex; justify-content:center; align-items:center;">
+            <div style="position:absolute; width:100%; height:100%; border:3px solid transparent; border-top:3px solid #00ff66; border-bottom:3px solid #00ff66; border-radius:50%; animation: spin 1.5s linear infinite;"></div>
+            <div style="position:absolute; width:70%; height:70%; border:2px solid transparent; border-left:2px solid #00ff66; border-right:2px solid #00ff66; border-radius:50%; animation: spinRev 1s linear infinite;"></div>
+            <div style="font-size:28px;">⚡</div>
+        </div>
+        <div id="ss_status_text" style="margin-top:30px; font-size:16px; font-weight:bold; letter-spacing:2px; text-shadow:0 0 8px #00ff66;">DECRYPTING MARKET DATA FLOW...</div>
+        <div style="width:240px; height:6px; background:#112215; border-radius:3px; margin-top:15px; overflow:hidden; border:1px solid #00ff66;">
+            <div id="ss_progress_bar" style="width:0%; height:100%; background:#00ff66; box-shadow:0 0 10px #00ff66; transition:width 0.1s linear;"></div>
+        </div>
+        <style>
+            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+            @keyframes spinRev { 0% { transform: rotate(0deg); } 100% { transform: rotate(-360deg); } }
+        </style>
+    `;
+    document.body.appendChild(scanOverlay);
 
     let doneModal = document.createElement('div');
     doneModal.id = 'sureshot-done-modal';
     doneModal.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 280px; background: #0c150e; border: 1.5px solid #ffffff;
+        width: 280px; background: #080f0a; border: 1.5px solid #00ff66;
         color: #ffffff; padding: 25px 20px; border-radius: 18px;
-        box-shadow: 0 0 25px rgba(0,0,0,0.8); z-index: 999999;
+        box-shadow: 0 0 25px rgba(0,255,102,0.4); z-index: 999999;
         font-family: Arial, sans-serif; text-align: center; display: none;
     `;
     doneModal.innerHTML = `
-        <h4 style="margin:0 0 10px 0; color:#ffffff; font-size:18px;">PROCESS COMPLETE</h4>
+        <h4 style="margin:0 0 10px 0; color:#00ff66; font-size:18px;">PROCESS COMPLETE</h4>
         <p style="font-size:12px; color:#cccccc; margin:0 0 20px 0;">Market Data Hacked Successfully</p>
-        <button id="ss_done_btn" style="width:100%; padding:10px; background:#ffffff; color:#000000; border:none; border-radius:8px; font-weight:bold; font-size:15px; cursor:pointer;">DONE</button>
+        <button id="ss_done_btn" style="width:100%; padding:10px; background:#00ff66; color:#000000; border:none; border-radius:8px; font-weight:bold; font-size:15px; cursor:pointer;">DONE</button>
     `;
     document.body.appendChild(doneModal);
 
@@ -180,45 +147,78 @@
         isDataHacked = true;
     };
 
-    function finishScan() {
-        if (analysisTimer) clearInterval(analysisTimer);
-        scanCanvas.style.display = 'none';
-        if (scanAnimationId) { cancelAnimationFrame(scanAnimationId); scanAnimationId = null; }
-        logoIcon.classList.remove('active-scan');
-        isScanning = false;
+    function triggerScan(durationSec, callback) {
+        scanOverlay.style.display = 'flex';
+        let progressBar = document.getElementById('ss_progress_bar');
+        let matrixText = document.getElementById('ss_matrix_text');
+        
+        let logs = [
+            "[EXPLOIT] Injecting System Entrypoint...",
+            "[SECURE] Bypassing cloud security thread...",
+            "[SIGNAL] Target execution payload loaded...",
+            "[SYS] Market trend dynamics calculating...",
+            "[DECRYPT] Bypassing threshold alignment...",
+            "[EXPLOIT] Port bypass: Orderbook tickers...",
+            "[SIGNAL] High-frequency signals aligned..."
+        ];
 
-        if (!isDataHacked) {
-            doneModal.style.display = 'block';
-        } else {
-            let selectedSignal = "UP";
-            if (redForce > greenForce) {
-                selectedSignal = "DOWN";
-            } else if (greenForce === redForce) {
-                selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
+        let logIdx = 0;
+        let matrixInterval = setInterval(() => {
+            if (logIdx < logs.length) {
+                matrixText.innerHTML += logs[logIdx] + "<br>";
+                logIdx++;
             }
-            executeTrade(selectedSignal);
-        }
+        }, (durationSec * 1000) / logs.length);
+
+        let startTime = Date.now();
+        let progressInterval = setInterval(() => {
+            let elapsed = (Date.now() - startTime) / 1000;
+            let percent = Math.min((elapsed / durationSec) * 100, 100);
+            progressBar.style.width = percent + '%';
+
+            if (elapsed >= durationSec) {
+                clearInterval(progressInterval);
+                clearInterval(matrixInterval);
+                scanOverlay.style.display = 'none';
+                progressBar.style.width = '0%';
+                matrixText.innerHTML = '';
+                logoIcon.classList.remove('active-scan');
+                isScanning = false;
+                callback();
+            }
+        }, 50);
     }
 
     function executeTrade(direction) {
-        let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
+        let allElements = Array.from(document.querySelectorAll('button, div, a, span, input'));
         let targetBtn = null;
 
         if (direction === "UP") {
             targetBtn = allElements.find(el => {
-                let text = (el.innerText || el.textContent || "").trim();
+                let text = (el.innerText || el.textContent || "").trim().toLowerCase();
                 let cls = (el.className || "").toString().toLowerCase();
-                return text.includes("Up") || text.includes("Call") || text.includes("কল") || cls.includes("btn-green") || cls.includes("button-call") || cls.includes("call");
+                return (text === "up" || text.includes("call") || cls.includes("btn-green") || cls.includes("button-call") || cls.includes("call")) && el.offsetWidth > 0;
             });
         } else {
             targetBtn = allElements.find(el => {
-                let text = (el.innerText || el.textContent || "").trim();
+                let text = (el.innerText || el.textContent || "").trim().toLowerCase();
                 let cls = (el.className || "").toString().toLowerCase();
-                return text.includes("Down") || text.includes("Put") || text.includes("পুট") || cls.includes("btn-red") || cls.includes("button-put") || cls.includes("put");
+                return (text === "down" || text.includes("put") || cls.includes("btn-red") || cls.includes("button-put") || cls.includes("put")) && el.offsetWidth > 0;
             });
         }
 
-        if (targetBtn) targetBtn.click();
+        if (targetBtn) {
+            targetBtn.click();
+            let rect = targetBtn.getBoundingClientRect();
+            let clickEvent = new MouseEvent('click', {
+                view: window,
+                bubbles: true,
+                cancelable: true,
+                clientX: rect.left + rect.width / 2,
+                clientY: rect.top + rect.height / 2
+            });
+            targetBtn.dispatchEvent(clickEvent);
+        }
     }
 
     document.getElementById('ss_login_btn').onclick = function () {
@@ -235,17 +235,17 @@
 
         isScanning = true;
         logoIcon.classList.add('active-scan');
-        scanCanvas.style.display = 'block';
-        scanY = 0;
-        scanStartTime = Date.now();
 
         if (!isDataHacked) {
-            currentDurationSec = 3;
+            triggerScan(3, function () {
+                doneModal.style.display = 'block';
+            });
         } else {
-            currentDurationSec = 5;
+            triggerScan(5, function () {
+                let currentSecond = new Date().getSeconds();
+                let selectedSignal = (currentSecond % 2 === 0) ? "UP" : "DOWN";
+                executeTrade(selectedSignal);
+            });
         }
-
-        startRealTimeAnalysis();
-        drawSmokeScanLine();
     });
 })();
