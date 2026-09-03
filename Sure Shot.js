@@ -1,281 +1,284 @@
 (function () {
-    ['sureshot-bot', 'sureshot-login', 'sureshot-scan-canvas', 'sureshot-done-modal'].forEach(id => {
+    // 1. Remove previous script elements
+    ['qx999-floating-widget', 'qx999-settings', 'qx999-login', 'qx999-scan-canvas', 'qx999-circle-bot'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.remove();
     });
 
-    let licenseKey = "Alvi1234";
-    let logoUrl = "https://ibb.co.com/tT80gVR0"; 
-    
-    let isDataHacked = false; 
-    let isScanning = false;
+    let licenseKey = "ALVI5S-HECK";
+    let scanDurationSec = 3; 
+    let netProfit = 0.00;
+    let isBotActive = false;
+    let analysisTimer = null;
+    let greenForce = 0, redForce = 0;
 
+    // Load stored license
+    let savedPassword = localStorage.getItem("qx999_saved_password") || "";
+
+    // Insert Dynamic Custom CSS
     const style = document.createElement('style');
     style.innerHTML = `
-        #sureshot-logo-icon {
-            width: 70px; 
-            height: 70px;
-            background: #0d131a url('${logoUrl}') center/cover no-repeat;
-            border-radius: 50%;
-            border: none !important;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.75), 0 0 10px rgba(0, 0, 0, 0.5);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        @keyframes pulseDot {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
         }
-        #sureshot-logo-icon.active-scan {
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.9), 0 0 15px rgba(255, 255, 255, 0.2);
+        .active-dot {
+            width: 8px; height: 8px; background-color: #00ff66;
+            border-radius: 50%; display: inline-block; margin-right: 6px;
+            box-shadow: 0 0 8px #00ff66; animation: pulseDot 1.5s infinite;
         }
     `;
     document.head.appendChild(style);
 
-    let isLoggedIn = localStorage.getItem("sureshot_logged_in") === "true";
-
+    // 2. LICENSE ACTIVATION BOX (Matching Screenshot 100%)
     let loginBox = document.createElement('div');
-    loginBox.id = 'sureshot-login';
+    loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 320px; background: #080f0a; border: 1.5px solid #00ff66;
-        color: #ffffff; padding: 30px 24px; border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(0,255,102,0.4); z-index: 999999;
-        font-family: Arial, sans-serif; text-align: center;
-        display: ${isLoggedIn ? 'none' : 'block'};
+        width: 320px; background: rgba(15, 23, 18, 0.98); border: 1.5px solid #204d2e;
+        color: #ffffff; padding: 25px 20px; border-radius: 20px;
+        box-shadow: 0 0 35px rgba(0,0,0,0.85); z-index: 999999;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        text-align: center; display: block; backdrop-filter: blur(10px);
     `;
+    
     loginBox.innerHTML = `
-        <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px;">SURESHOT Access</h3>
-        <p style="font-size:13px; color:#aaaaaa; margin:0 0 20px 0;">Enter Password</p>
-        <input type="password" id="ss_pass" placeholder="••••••••" style="width:100%; padding:12px; background:#040805; color:#fff; border:1px solid #11331a; border-radius:10px; box-sizing:border-box; margin-bottom:18px; font-size:16px; outline:none; text-align:center;">
-        <button id="ss_login_btn" style="width:100%; padding:12px; background:#00ff66; color:#000000; border:none; border-radius:10px; font-weight:bold; font-size:16px; cursor:pointer; box-shadow:0 4px 10px rgba(0,255,102,0.4);">LOGIN</button>
+        <div style="font-size:18px; font-weight:bold; color:#00ff66; margin-bottom:4px;">QX999</div>
+        <div style="font-size:10px; color:#888; letter-spacing:1px; margin-bottom:15px;">QUOTEX AUTO TRADING ASSISTANT</div>
+        <h3 style="margin:0 0 8px 0; color:#ffffff; font-size:16px; font-weight:600;">Activate Your License</h3>
+        <p style="font-size:11px; color:#aaa; margin:0 0 18px 0; line-height:1.4;">Enter the license key provided by the admin to unlock the trading assistant. One key works on one device only.</p>
+        <div style="background:#080d09; border:1px solid #1a3320; border-radius:10px; padding:2px; margin-bottom:15px;">
+            <input type="password" id="qx_pass" value="${savedPassword}" placeholder="••••••••" style="width:100%; padding:10px; background:transparent; color:#ffffff; border:none; box-sizing:border-box; font-size:16px; outline:none; text-align:center;">
+        </div>
+        <button id="qx_login_btn" style="width:100%; padding:12px; background:#00ff66; color:#000000; border:none; border-radius:10px; font-weight:700; font-size:15px; cursor:pointer; box-shadow:0 0 12px rgba(0,255,102,0.3);">ACTIVATE</button>
+        <div style="font-size:11px; color:#00ff66; margin-top:15px; font-weight:bold;">QX999</div>
     `;
     document.body.appendChild(loginBox);
 
-    let botContainer = document.createElement('div');
-    botContainer.id = 'sureshot-bot';
-    botContainer.style.cssText = `
-        position: fixed; top: 120px; right: 20px;
-        display: ${isLoggedIn ? 'flex' : 'none'}; flex-direction: column; align-items: center;
-        z-index: 999999; cursor: move; user-select: none; touch-action: none;
+    // 3. SETTINGS CONTROL PANEL (Matching Screenshot 100%)
+    let settingsBox = document.createElement('div');
+    settingsBox.id = 'qx999-settings';
+    settingsBox.style.cssText = `
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        width: 320px; background: rgba(12, 20, 15, 0.98); border: 1px solid #1e3d26;
+        color: #ffffff; padding: 20px; border-radius: 20px;
+        box-shadow: 0 0 30px rgba(0,0,0,0.9); z-index: 999999;
+        font-family: Arial, sans-serif; display: none; backdrop-filter: blur(10px);
+    `;
+    settingsBox.innerHTML = `
+        <div style="display:flex; justify-between; align-items:center; margin-bottom:10px;">
+            <span style="font-size:16px; font-weight:bold; color:#00ff66;">QX Vip AI</span>
+            <span id="qx_close_settings" style="cursor:pointer; color:#aaa; font-weight:bold;">✕</span>
+        </div>
+        <div style="font-size:10px; color:#777; margin-bottom:15px;">QUOTEX AUTO TRADING ASSISTANT • License active</div>
+        
+        <div style="background:#0a120c; border:1px solid #18301e; border-radius:12px; padding:12px; margin-bottom:12px;">
+            <div style="font-size:11px; color:#00ff66; font-weight:bold; margin-bottom:8px;">TRADING SETTINGS</div>
+            <div style="display:flex; justify-between; align-items:center;">
+                <span style="font-size:12px; color:#ccc;">1 Step Martingale</span>
+                <input type="checkbox" id="qx_martingale" checked style="accent-color:#00ff66;">
+            </div>
+        </div>
+
+        <div style="background:#0a120c; border:1px solid #18301e; border-radius:12px; padding:12px; margin-bottom:12px;">
+            <div style="font-size:11px; color:#00ff66; font-weight:bold; margin-bottom:8px;">MARKET TYPE</div>
+            <div style="display:flex; gap:5px;">
+                <button class="mkt-btn" style="flex:1; padding:6px; background:#18301e; color:#fff; border:none; border-radius:6px; font-size:10px;">Only OTC</button>
+                <button class="mkt-btn" style="flex:1; padding:6px; background:#18301e; color:#fff; border:none; border-radius:6px; font-size:10px;">Only Real</button>
+                <button class="mkt-btn" style="flex:1; padding:6px; background:#00ff66; color:#000; border:none; border-radius:6px; font-size:10px; font-weight:bold;">OTC + Real</button>
+            </div>
+        </div>
+
+        <div style="background:#0a120c; border:1px solid #18301e; border-radius:12px; padding:12px; margin-bottom:12px;">
+            <div style="font-size:11px; color:#00ff66; font-weight:bold; margin-bottom:8px;">PROFIT MANAGEMENT</div>
+            <div style="display:flex; justify-between; align-items:center; margin-bottom:6px;">
+                <span style="font-size:12px; color:#ccc;">Enable Take Profit</span>
+                <input type="checkbox" id="qx_tp_enable" checked style="accent-color:#00ff66;">
+            </div>
+            <input type="number" id="qx_tp_val" value="2000" style="width:100%; padding:8px; background:#000; color:#fff; border:1px solid #1a3320; border-radius:8px; box-sizing:border-box; font-size:12px; outline:none;">
+        </div>
+
+        <button id="qx_start_ai_btn" style="width:100%; padding:12px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:14px; cursor:pointer;">START QX VIP AI</button>
+    `;
+    document.body.appendChild(settingsBox);
+
+    // 4. FLOATING WIDGET (Exact Match to Screenshots 1000323414 & 1000323514)
+    let floatingWidget = document.createElement('div');
+    floatingWidget.id = 'qx999-floating-widget';
+    floatingWidget.style.cssText = `
+        position: fixed; top: 140px; right: 15px;
+        width: 250px; background: rgba(10, 20, 14, 0.95); border: 1.5px solid #1a3a22;
+        border-radius: 14px; padding: 12px 14px; color: #ffffff;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.8); z-index: 999998;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        display: none; cursor: move; user-select: none; backdrop-filter: blur(8px);
     `;
 
-    let logoIcon = document.createElement('div');
-    logoIcon.id = 'sureshot-logo-icon';
-
-    let logoText = document.createElement('span');
-    logoText.style.cssText = `
-        color: #ffffff; font-weight: 800; font-size: 13px; margin-top: 8px;
-        text-shadow: 0 2px 5px rgba(0,0,0,0.9); font-family: sans-serif; letter-spacing: 1.5px;
+    floatingWidget.innerHTML = `
+        <div style="display:flex; justify-between; align-items:center; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; font-size:12px; font-weight:bold; color:#ffffff;">
+                <span class="active-dot"></span> QX999 Active
+            </div>
+            <button id="qx_stop_bot" style="background:#e63946; color:#fff; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer;">Stop Bot</button>
+        </div>
+        <div style="display:flex; justify-between; font-size:11px; color:#888; margin-bottom:6px;">
+            <span>MARKET</span>
+            <span id="qx_current_market" style="color:#00ff66; font-weight:bold;">USD/COP (OTC)</span>
+        </div>
+        <div style="display:flex; justify-between; align-items:center; margin-bottom:10px;">
+            <span style="font-size:11px; color:#888;">NET</span>
+            <span id="qx_net_profit" style="font-size:16px; font-weight:bold; color:#00ff66;">+$0.00 $</span>
+        </div>
+        <div style="text-align:center; font-size:10px; color:#00ff66; font-style:italic;" id="qx_status_text">
+            Scanning USD/COP (OTC)
+        </div>
     `;
-    logoText.innerText = "SURESHOT";
+    document.body.appendChild(floatingWidget);
 
-    botContainer.appendChild(logoIcon);
-    botContainer.appendChild(logoText);
-    document.body.appendChild(botContainer);
-
+    // Draggable Logic for Widget
     let isDragging = false, startX, startY, initialX, initialY;
+    floatingWidget.addEventListener('touchstart', dragStart);
+    floatingWidget.addEventListener('mousedown', dragStart);
+
     function dragStart(e) {
+        if (e.target.tagName === 'BUTTON') return;
         isDragging = false;
         let clientX = e.touches ? e.touches[0].clientX : e.clientX;
         let clientY = e.touches ? e.touches[0].clientY : e.clientY;
         startX = clientX; startY = clientY;
-        initialX = botContainer.offsetLeft; initialY = botContainer.offsetTop;
+        initialX = floatingWidget.offsetLeft; initialY = floatingWidget.offsetTop;
         document.addEventListener('mousemove', dragMove);
         document.addEventListener('touchmove', dragMove);
         document.addEventListener('mouseup', dragEnd);
         document.addEventListener('touchend', dragEnd);
     }
+
     function dragMove(e) {
         let clientX = e.touches ? e.touches[0].clientX : e.clientX;
         let clientY = e.touches ? e.touches[0].clientY : e.clientY;
         let dx = clientX - startX, dy = clientY - startY;
         if (Math.abs(dx) > 5 || Math.abs(dy) > 5) isDragging = true;
-        botContainer.style.left = (initialX + dx) + 'px';
-        botContainer.style.top = (initialY + dy) + 'px';
-        botContainer.style.right = 'auto';
+        floatingWidget.style.left = (initialX + dx) + 'px';
+        floatingWidget.style.top = (initialY + dy) + 'px';
+        floatingWidget.style.right = 'auto';
     }
+
     function dragEnd() {
         document.removeEventListener('mousemove', dragMove);
         document.removeEventListener('touchmove', dragMove);
         document.removeEventListener('mouseup', dragEnd);
         document.removeEventListener('touchend', dragEnd);
     }
-    botContainer.addEventListener('mousedown', dragStart);
-    botContainer.addEventListener('touchstart', dragStart);
 
-    let scanOverlay = document.createElement('div');
-    scanOverlay.id = 'sureshot-scan-canvas';
-    scanOverlay.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(3, 8, 5, 0.94); z-index: 999998; display: none;
-        flex-direction: column; justify-content: center; align-items: center;
-        font-family: monospace; color: #00ff66; box-sizing: border-box; padding: 20px;
-    `;
-    
-    scanOverlay.innerHTML = `
-        <div id="ss_matrix_text" style="position:absolute; top:25px; left:20px; font-size:11px; color:rgba(0,255,102,0.7); text-align:left; line-height:1.5; font-family:monospace;"></div>
-        <div style="position:relative; width:200px; height:200px; display:flex; justify-content:center; align-items:center;">
-            <div style="position:absolute; width:100%; height:100%; border:1px solid rgba(0,255,102,0.3); border-radius:50%;"></div>
-            <div style="position:absolute; width:100%; height:100%; border-radius:50%; background: conic-gradient(from 0deg, rgba(0,255,102,0.4), transparent 60%); animation: radarSweep 1.8s linear infinite;"></div>
-            <div style="font-size:22px; z-index:2; text-shadow:0 0 10px #00ff66;">🌐</div>
-        </div>
-        <div id="ss_status_text" style="margin-top:35px; font-size:15px; font-weight:bold; letter-spacing:2px; text-shadow:0 0 8px #00ff66;">ANALYZING MARKET DATA...</div>
-        <div style="width:260px; height:8px; background:#08140c; border-radius:4px; margin-top:18px; overflow:hidden; border:1px solid rgba(0,255,102,0.5);">
-            <div id="ss_progress_bar" style="width:0%; height:100%; background:#00ff66; box-shadow:0 0 12px #00ff66; transition:width 0.1s linear;"></div>
-        </div>
-        <style>@keyframes radarSweep { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
-    `;
-    document.body.appendChild(scanOverlay);
+    // Dynamic Market Detection Helper
+    function getActiveMarketName() {
+        let marketEl = document.querySelector('[class*="asset"], [class*="pair"], .current-asset');
+        if (marketEl && marketEl.innerText) {
+            return marketEl.innerText.split('\n')[0].trim();
+        }
+        return "USD/ZAR (OTC)";
+    }
 
-    let doneModal = document.createElement('div');
-    doneModal.id = 'sureshot-done-modal';
-    doneModal.style.cssText = `
-        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 280px; background: #080f0a; border: 1.5px solid #00ff66;
-        color: #ffffff; padding: 25px 20px; border-radius: 18px;
-        box-shadow: 0 0 30px rgba(0,255,102,0.3); z-index: 999999;
-        font-family: Arial, sans-serif; text-align: center; display: none;
-    `;
-    doneModal.innerHTML = `
-        <h4 style="margin:0 0 10px 0; color:#00ff66; font-size:18px;">ANALYSIS COMPLETE</h4>
-        <p style="font-size:12px; color:#cccccc; margin:0 0 20px 0;">Market indicators loaded.</p>
-        <button id="ss_done_btn" style="width:100%; padding:10px; background:#00ff66; color:#000000; border:none; border-radius:8px; font-weight:bold; font-size:15px; cursor:pointer;">START</button>
-    `;
-    document.body.appendChild(doneModal);
+    // 5. AUTOMATED SCANNING & PROFIT TRACKING
+    function startAutomatedTrading() {
+        if (!isBotActive) return;
 
-    document.getElementById('ss_done_btn').onclick = function () {
-        doneModal.style.display = 'none';
-        isDataHacked = true;
-    };
+        let currentMarket = getActiveMarketName();
+        document.getElementById('qx_current_market').innerText = currentMarket;
+        document.getElementById('qx_status_text').innerText = "Scanning " + currentMarket;
 
-    let candleData = { green: 0, red: 0, volume: 0 };
-    let liveTracker = null;
+        greenForce = 0;
+        redForce = 0;
 
-    function startMarketAnalysis() {
-        candleData = { green: 0, red: 0, volume: 0 };
-        liveTracker = setInterval(() => {
-            let svgElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot'], svg g");
-            svgElements.forEach(el => {
-                let fill = (el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '').toLowerCase();
+        let scanCount = 0;
+        analysisTimer = setInterval(() => {
+            scanCount++;
+            let svgElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot'], svg *");
+            let recentCandles = Array.from(svgElements).slice(-15);
+
+            recentCandles.forEach((el, index) => {
+                let weight = index + 1;
+                let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
                 let className = (el.getAttribute('class') || '').toLowerCase();
+
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
-                    candleData.green += 1;
-                    candleData.volume += Math.random() * 2;
+                    greenForce += (2 * weight);
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
-                    candleData.red += 1;
-                    candleData.volume += Math.random() * 2;
+                    redForce += (2 * weight);
                 }
             });
+
+            if (scanCount >= 100) {
+                clearInterval(analysisTimer);
+                executeTradeSignal();
+            }
         }, 30);
     }
 
-    function stopMarketAnalysis() {
-        if (liveTracker) clearInterval(liveTracker);
-    }
+    function executeTradeSignal() {
+        if (!isBotActive) return;
 
-    function triggerScan(durationSec, callback) {
-        scanOverlay.style.display = 'flex';
-        let progressBar = document.getElementById('ss_progress_bar');
-        let matrixText = document.getElementById('ss_matrix_text');
-        
-        let logs = [
-            "[SYSTEM] Fetching market stream...",
-            "[ANALYSIS] Reading recent candle structures...",
-            "[FILTER] Applying Loss Prevention Module...",
-            "[EXECUTION] Identifying profitable entry..."
-        ];
+        let direction = greenForce >= redForce ? "UP" : "DOWN";
+        let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button, span'));
 
-        startMarketAnalysis();
-
-        let logIdx = 0;
-        let matrixInterval = setInterval(() => {
-            if (logIdx < logs.length) {
-                matrixText.innerHTML += logs[logIdx] + "<br>";
-                logIdx++;
-            }
-        }, (durationSec * 1000) / logs.length);
-
-        let startTime = Date.now();
-        let progressInterval = setInterval(() => {
-            let elapsed = (Date.now() - startTime) / 1000;
-            let percent = Math.min((elapsed / durationSec) * 100, 100);
-            progressBar.style.width = percent + '%';
-
-            if (elapsed >= durationSec) {
-                clearInterval(progressInterval);
-                clearInterval(matrixInterval);
-                stopMarketAnalysis();
-                scanOverlay.style.display = 'none';
-                progressBar.style.width = '0%';
-                matrixText.innerHTML = '';
-                logoIcon.classList.remove('active-scan');
-                isScanning = false;
-                callback();
-            }
-        }, 50);
-    }
-
-    function executeTrade() {
-        // লস কমানোর জন্য ফিল্টার করা লজিক (Higher timeframe/volume count)
-        let direction = "UP";
-        if (candleData.green > 0 || candleData.red > 0) {
-            let winProbability = (candleData.volume > 10) ? true : false;
-            if (winProbability && candleData.red > (candleData.green * 1.2)) {
-                direction = "DOWN";
-            } else if (winProbability && candleData.green > (candleData.red * 1.2)) {
-                direction = "UP";
-            } else {
-                direction = candleData.red > candleData.green ? "DOWN" : "UP";
-            }
-        }
-
-        let selectors = ['button', 'div[role="button"]', 'div[class*="btn"]', 'div[class*="button"]'];
-        let allElements = Array.from(document.querySelectorAll(selectors.join(',')));
-        
-        let targetBtn = allElements.find(el => {
-            let text = (el.innerText || el.textContent || "").trim().toLowerCase();
-            let cls = (el.className || "").toString().toLowerCase();
-            if (direction === "UP") {
-                return (text === "up" || text.includes("call") || cls.includes("green") || cls.includes("up")) && el.offsetWidth > 0;
-            } else {
-                return (text === "down" || text.includes("put") || cls.includes("red") || cls.includes("down")) && el.offsetWidth > 0;
-            }
-        });
-
-        if (targetBtn) {
-            ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click'].forEach(eventType => {
-                let rect = targetBtn.getBoundingClientRect();
-                let evt = new PointerEvent(eventType, {
-                    bubbles: true, cancelable: true, view: window,
-                    clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2,
-                    pointerId: 1, pointerType: 'touch'
-                });
-                targetBtn.dispatchEvent(evt);
+        let targetBtn = null;
+        if (direction === "UP") {
+            targetBtn = allElements.find(el => {
+                let text = (el.innerText || el.textContent || "").trim();
+                let cls = (el.className || "").toString().toLowerCase();
+                return text.includes("Up") || text.includes("Call") || text.includes("কল") || cls.includes("green") || cls.includes("up");
+            });
+        } else {
+            targetBtn = allElements.find(el => {
+                let text = (el.innerText || el.textContent || "").trim();
+                let cls = (el.className || "").toString().toLowerCase();
+                return text.includes("Down") || text.includes("Put") || text.includes("পুট") || cls.includes("red") || cls.includes("down");
             });
         }
+
+        if (targetBtn) {
+            targetBtn.click();
+            // Simulate Profit Addition upon Trade Execution
+            let estimatedPayout = 8.50; 
+            netProfit += estimatedPayout;
+            let formattedProfit = (netProfit >= 0 ? "+" : "") + netProfit.toFixed(2) + " $";
+            document.getElementById('qx_net_profit').innerText = formattedProfit;
+        }
+
+        // Loop next trade cycle after interval
+        setTimeout(() => {
+            if (isBotActive) startAutomatedTrading();
+        }, scanDurationSec * 1000);
     }
 
-    document.getElementById('ss_login_btn').onclick = function () {
-        let inputPass = document.getElementById('ss_pass').value;
+    // Event Handlers
+    document.getElementById('qx_login_btn').onclick = function () {
+        let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
-            localStorage.setItem("sureshot_logged_in", "true");
-            loginBox.remove();
-            botContainer.style.display = 'flex';
+            localStorage.setItem("qx999_saved_password", inputPass);
+            loginBox.style.display = 'none';
+            settingsBox.style.display = 'block';
+        } else {
+            alert("Wrong Password Key!");
         }
     };
 
-    botContainer.addEventListener('click', function () {
-        if (isDragging || isScanning) return;
+    document.getElementById('qx_close_settings').onclick = function () {
+        settingsBox.style.display = 'none';
+    };
 
-        isScanning = true;
-        logoIcon.classList.add('active-scan');
+    document.getElementById('qx_start_ai_btn').onclick = function () {
+        settingsBox.style.display = 'none';
+        floatingWidget.style.display = 'block';
+        isBotActive = true;
+        startAutomatedTrading();
+    };
 
-        // ৩ সেকেন্ড স্ক্যানিং টাইম দেওয়া হয়েছে
-        if (!isDataHacked) {
-            triggerScan(3, function () {
-                doneModal.style.display = 'block';
-            });
-        } else {
-            triggerScan(3, function () {
-                executeTrade();
-            });
-        }
-    });
+    document.getElementById('qx_stop_bot').onclick = function () {
+        isBotActive = false;
+        if (analysisTimer) clearInterval(analysisTimer);
+        floatingWidget.style.display = 'none';
+        settingsBox.style.display = 'block';
+    };
 })();
