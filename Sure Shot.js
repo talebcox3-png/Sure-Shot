@@ -6,9 +6,10 @@
     });
 
     let isAnalyzing = false;
-    let customLogoUrl = "https://i.ibb.co/1f4WWvb1";
+    // Direct Image URL
+    let customLogoUrl = "https://i.ibb.co.com/3yPZZrk2/1000323932-photoaidcom-cropped-jpg.png";
 
-    // 2. CSS Styles & Exact Video Animations
+    // 2. CSS Styles & Rotating Green Border Animation
     const style = document.createElement('style');
     style.id = 'qxvip-style-sheet';
     style.innerHTML = `
@@ -27,27 +28,27 @@
             100% { opacity: 0.4; transform: translate(-50%, -50%) scale(0.96); }
         }
 
-        /* CIRCULAR WIDGET (LIKE VIDEO) */
+        /* CIRCULAR WIDGET WITH ROTATING GREEN BORDER */
         .qxvip-widget-btn {
             position: fixed; top: 140px; right: 15px;
-            width: 60px; height: 60px; border-radius: 50%;
+            width: 65px; height: 65px; border-radius: 50%;
             background: rgba(3, 10, 5, 0.95);
             border: 2px solid #00ff66;
-            box-shadow: 0 0 15px rgba(0, 255, 102, 0.7);
+            box-shadow: 0 0 18px rgba(0, 255, 102, 0.8);
             display: flex; align-items: center; justify-content: center;
             z-index: 999998; cursor: pointer; user-select: none;
             backdrop-filter: blur(6px);
         }
         .qxvip-widget-btn::before {
-            content: ''; position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px;
-            border-radius: 50%; border: 1.5px dashed #00ff66;
-            animation: rotateBorder 6s linear infinite; pointer-events: none;
+            content: ''; position: absolute; top: -6px; left: -6px; right: -6px; bottom: -6px;
+            border-radius: 50%; border: 2.5px dashed #00ff66;
+            animation: rotateBorder 3s linear infinite; pointer-events: none;
         }
         .qxvip-widget-img {
-            width: 48px; height: 48px; border-radius: 50%; object-fit: cover;
+            width: 52px; height: 52px; border-radius: 50%; object-fit: cover;
         }
 
-        /* VIDEO SCANNING ANIMATION */
+        /* SCANNING ANIMATION */
         .qxvip-scan-line {
             position: fixed; left: 0; width: 100%; height: 3px;
             background: #00ff66; box-shadow: 0 0 15px #00ff66, 0 0 30px #00ff66;
@@ -69,7 +70,7 @@
     let widget = document.createElement('div');
     widget.id = 'qxvip-circle-widget';
     widget.className = 'qxvip-widget-btn';
-    widget.innerHTML = `<img src="${customLogoUrl}" class="qxvip-widget-img" alt="QX VIP" onerror="this.src='https://i.ibb.co/6R22h32/image.png'">`;
+    widget.innerHTML = `<img src="${customLogoUrl}" class="qxvip-widget-img" alt="QX VIP">`;
     document.body.appendChild(widget);
 
     let scanLine = document.createElement('div');
@@ -125,56 +126,51 @@
         }
     }
 
-    // 4. AI MARKET SCANNING & ACCURACY ENGINE
+    // 4. AI MARKET SCANNING ENGINE
     function startAiMarketAnalysis() {
         isAnalyzing = true;
         scanLine.style.display = 'block';
         scanText.style.display = 'block';
 
-        // 3 Seconds Scan Time (Matching Video)
         setTimeout(() => {
             scanLine.style.display = 'none';
             scanText.style.display = 'none';
 
-            // Real AI Chart Analysis Signal
-            let signal = analyzeChartCandles();
+            let signal = analyzeMarketSignal();
             executeTradeSignal(signal);
 
             isAnalyzing = false;
         }, 3000);
     }
 
-    // Real AI Candle & Momentum Reader
-    function analyzeChartCandles() {
-        let redCandles = 0;
-        let greenCandles = 0;
+    // Candle Pattern & Price Action Momentum Logic
+    function analyzeMarketSignal() {
+        let redElements = 0;
+        let greenElements = 0;
 
-        // Fetch DOM Elements related to chart candles on Quotex
-        let chartNodes = document.querySelectorAll('svg path, canvas, div[class*="candle"], div[class*="chart"]');
-
-        chartNodes.forEach(node => {
-            let fill = window.getComputedStyle(node).fill || '';
-            let stroke = window.getComputedStyle(node).stroke || '';
+        let allNodes = document.querySelectorAll('svg path, canvas, div, span');
+        allNodes.forEach(node => {
+            let color = window.getComputedStyle(node).color || '';
             let bg = window.getComputedStyle(node).backgroundColor || '';
+            let fill = window.getComputedStyle(node).fill || '';
 
-            let colorStr = fill + stroke + bg;
-
-            if (colorStr.includes('255, 74, 104') || colorStr.includes('eb4d4b') || colorStr.includes('ff4d4d')) {
-                redCandles++;
-            } else if (colorStr.includes('0, 255, 102') || colorStr.includes('26a69a') || colorStr.includes('00e676')) {
-                greenCandles++;
+            let merged = color + bg + fill;
+            if (merged.includes('255, 74, 104') || merged.includes('eb4d4b') || merged.includes('ff4d4d')) {
+                redElements++;
+            } else if (merged.includes('0, 255, 102') || merged.includes('26a69a') || merged.includes('00e676')) {
+                greenElements++;
             }
         });
 
-        // Price Reversal Signal Logic
-        if (redCandles > greenCandles) {
-            return 'UP';   // Market Reversal UP
+        // Price Reversal Logic based on DOM readings
+        if (redElements >= greenElements) {
+            return 'UP';   // Reversal Signal -> Call Trade
         } else {
-            return 'DOWN'; // Market Reversal DOWN
+            return 'DOWN'; // Reversal Signal -> Put Trade
         }
     }
 
-    // Exact Quotex Trade Trigger Execution
+    // Accurate Quotex Button Clicking
     function executeTradeSignal(signal) {
         let upBtn = document.querySelector('button.btn-up, .section-deal__button._green, button[class*="call"], .call-btn');
         let downBtn = document.querySelector('button.btn-down, .section-deal__button._red, button[class*="put"], .put-btn');
@@ -189,8 +185,6 @@
             upBtn.click();
         } else if (signal === 'DOWN' && downBtn) {
             downBtn.click();
-        } else if (upBtn) {
-            upBtn.click();
         }
     }
 })();
