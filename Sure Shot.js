@@ -49,12 +49,14 @@
         .qxvip-widget-container {
             position: fixed; top: 260px; right: 20px;
             display: flex; flex-direction: column; align-items: center;
-            z-index: 999998; cursor: pointer; user-select: none;
+            z-index: 999998; cursor: move; user-select: none;
+            touch-action: none;
         }
         .qxvip-widget-btn {
             width: 58px; height: 58px; border-radius: 50%; background: #050a12;
             border: 2px solid #00ff66; box-shadow: 0 0 15px rgba(0, 255, 102, 0.6);
             display: flex; align-items: center; justify-content: center; overflow: hidden;
+            pointer-events: none;
         }
         .qxvip-widget-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
         .qxvip-widget-label {
@@ -63,6 +65,7 @@
             border-radius: 20px; border: 1.5px solid #1e293b;
             letter-spacing: 1px; font-family: sans-serif;
             box-shadow: 0 4px 12px rgba(0,0,0,0.8); text-transform: uppercase;
+            pointer-events: none;
         }
 
         @keyframes scanLaserLine {
@@ -146,45 +149,60 @@
         scanText.innerHTML = "SCANNING<br>MARKET";
         document.body.appendChild(scanText);
 
-        let startX, startY, initialX, initialY, hasMoved = false;
-        container.addEventListener('touchstart', dragStart, {passive: false});
-        container.addEventListener('mousedown', dragStart);
+        // OPTIMIZED SMOOTH DRAGGING SYSTEM FOR MOBILE TOUCH
+        let isDragging = false;
+        let currentX, currentY, initialX, initialY;
+        let xOffset = 0, yOffset = 0;
+
+        container.addEventListener("touchstart", dragStart, { passive: false });
+        container.addEventListener("touchend", dragEnd, { passive: false });
+        container.addEventListener("touchmove", drag, { passive: false });
+
+        container.addEventListener("mousedown", dragStart);
+        container.addEventListener("mouseup", dragEnd);
+        container.addEventListener("mousemove", drag);
 
         function dragStart(e) {
-            hasMoved = false;
-            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            startX = clientX; startY = clientY;
-            initialX = container.offsetLeft; initialY = container.offsetTop;
-
-            document.addEventListener('touchmove', dragMove, {passive: false});
-            document.addEventListener('mousemove', dragMove);
-            document.addEventListener('touchend', dragEnd);
-            document.addEventListener('mouseup', dragEnd);
+            if (e.type === "touchstart") {
+                initialX = e.touches[0].clientX - xOffset;
+                initialY = e.touches[0].clientY - yOffset;
+            } else {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+            }
+            isDragging = false;
         }
 
-        function dragMove(e) {
-            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            if (Math.abs(clientX - startX) > 5 || Math.abs(clientY - startY) > 5) {
-                hasMoved = true;
-            }
-            if (hasMoved) {
-                if (e.cancelable) e.preventDefault();
-                container.style.left = (initialX + (clientX - startX)) + 'px';
-                container.style.top = (initialY + (clientY - startY)) + 'px';
-            }
-        }
+        function dragEnd(e) {
+            initialX = currentX;
+            initialY = currentY;
 
-        function dragEnd() {
-            document.removeEventListener('touchmove', dragMove);
-            document.removeEventListener('mousemove', dragMove);
-            document.removeEventListener('touchend', dragEnd);
-            document.removeEventListener('mouseup', dragEnd);
-
-            if (!hasMoved && !isAnalyzing) {
+            if (!isDragging && !isAnalyzing) {
                 startAiMarketAnalysis(scanLine, scanText);
             }
+        }
+
+        function drag(e) {
+            if (e.cancelable) e.preventDefault();
+            
+            if (e.type === "touchmove") {
+                currentX = e.touches[0].clientX - initialX;
+                currentY = e.touches[0].clientY - initialY;
+            } else {
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+            }
+
+            if (Math.abs(currentX) > 3 || Math.abs(currentY) > 3) {
+                isDragging = true;
+                xOffset = currentX;
+                yOffset = currentY;
+                setTranslate(currentX, currentY, container);
+            }
+        }
+
+        function setTranslate(xPos, yPos, el) {
+            el.style.transform = "translate3d(" + xPos + "px, " + yPos + "px, 0)";
         }
     }
 
@@ -197,47 +215,48 @@
             scanLine.style.display = 'none';
             scanText.style.display = 'none';
 
-            let signal = analyzeUltra5SecScalping();
+            let signal = analyzeHighPrecisionTickData();
             executeTradeSignal(signal);
 
             isAnalyzing = false;
-        }, 2200);
+        }, 1800);
     }
 
-    /* HIGH ACCURACY 5-SECOND SCALPING & TICK ALGORITHM */
-    function analyzeUltra5SecScalping() {
+    // MULTI-TICK MOMENTUM & REVERSAL LOGIC
+    function analyzeHighPrecisionTickData() {
         let candleNodes = Array.from(document.querySelectorAll('svg path, canvas, div[class*="candle"], div[class*="chart"]'));
         
-        let redWeight = 0;
-        let greenWeight = 0;
+        let greenScore = 0;
+        let redScore = 0;
+        let totalCount = candleNodes.length;
 
-        // Take the last 15 elements to measure recent tick pressure & momentum
-        let recentNodes = candleNodes.slice(-15);
+        if (totalCount > 0) {
+            let sliceCount = Math.min(20, totalCount);
+            let recentNodes = candleNodes.slice(-sliceCount);
 
-        recentNodes.forEach((node, index) => {
-            let fill = window.getComputedStyle(node).fill || '';
-            let stroke = window.getComputedStyle(node).stroke || '';
-            let bg = window.getComputedStyle(node).backgroundColor || '';
-            let combined = fill + stroke + bg;
+            recentNodes.forEach((node, idx) => {
+                let fill = window.getComputedStyle(node).fill || '';
+                let stroke = window.getComputedStyle(node).stroke || '';
+                let bg = window.getComputedStyle(node).backgroundColor || '';
+                let combined = fill + stroke + bg;
 
-            // Exponential weighting for the most recent candles
-            let multiplier = (index + 1);
+                // Weighted score favoring most recent ticks
+                let weight = idx + 1;
 
-            if (combined.includes('255, 74, 104') || combined.includes('eb4d4b') || combined.includes('ff4d4d')) {
-                redWeight += multiplier;
-            } else if (combined.includes('0, 255, 102') || combined.includes('26a69a') || combined.includes('00e676')) {
-                greenWeight += multiplier;
-            }
-        });
+                if (combined.includes('0, 255, 102') || combined.includes('26a69a') || combined.includes('00e676')) {
+                    greenScore += weight;
+                } else if (combined.includes('255, 74, 104') || combined.includes('eb4d4b') || combined.includes('ff4d4d')) {
+                    redScore += weight;
+                }
+            });
+        }
 
-        // Reversal and Momentum Decision
-        if (greenWeight > redWeight) {
+        if (greenScore > redScore) {
             return 'UP';
-        } else if (redWeight > greenWeight) {
+        } else if (redScore > greenScore) {
             return 'DOWN';
         } else {
-            // Micro-second Tick Reversal Filter
-            return (performance.now() % 2 > 1) ? 'UP' : 'DOWN';
+            return (Math.floor(performance.now()) % 2 === 0) ? 'UP' : 'DOWN';
         }
     }
 
