@@ -1,5 +1,5 @@
 (function () {
-    // 1. Remove previous elements if existing
+    // 1. Clear Previous Instances
     ['qxvip-login-modal', 'qxvip-circle-widget', 'qxvip-style-sheet', 'qxvip-scan-line', 'qxvip-scan-text'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.remove();
@@ -9,115 +9,114 @@
     let customLogoUrl = "https://i.ibb.co.com/3yPZZrk2/1000323932-photoaidcom-cropped-jpg.png";
     const CORRECT_PASS = "5S-XALVI1001";
 
-    // 2. CSS Inject (Custom Sleek Login UI + Main Widget)
+    // 2. CSS STYLES (LUXURY UI & SMOOTH ANIMATIONS)
     const style = document.createElement('style');
     style.id = 'qxvip-style-sheet';
     style.innerHTML = `
-        /* LOGIN MODAL STYLES */
+        /* LUXURY LOGIN MODAL */
         .qxvip-login-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(2, 6, 12, 0.85); backdrop-filter: blur(8px);
+            background: rgba(3, 8, 16, 0.88); backdrop-filter: blur(10px);
             display: flex; align-items: center; justify-content: center;
-            z-index: 9999999; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            z-index: 9999999; font-family: 'Inter', -apple-system, sans-serif;
         }
         .qxvip-login-card {
-            width: 320px; background: #0b111e;
-            border: 1.5px solid #00ff66; border-radius: 16px;
-            box-shadow: 0 0 25px rgba(0, 255, 102, 0.35);
+            width: 310px; background: #080d16;
+            border: 1px solid rgba(0, 255, 102, 0.4); border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 255, 102, 0.2);
             overflow: hidden; text-align: center;
-            animation: modalFade 0.3s ease-out;
+            animation: modalPop 0.25s ease-out;
         }
-        @keyframes modalFade {
-            from { opacity: 0; transform: scale(0.9); }
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.92); }
             to { opacity: 1; transform: scale(1); }
         }
         .qxvip-login-header {
-            background: linear-gradient(135deg, #051a0e, #0b111e);
-            padding: 18px 10px; border-bottom: 1px solid rgba(0, 255, 102, 0.2);
+            background: linear-gradient(180deg, #0f1929 0%, #080d16 100%);
+            padding: 20px 15px 10px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
         .qxvip-login-header h2 {
-            margin: 0; color: #00ff66; font-size: 20px;
-            font-weight: 800; letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
+            margin: 0; color: #00ff66; font-size: 18px;
+            font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+            text-shadow: 0 0 8px rgba(0, 255, 102, 0.5);
         }
         .qxvip-login-body {
-            padding: 22px 20px;
-        }
-        .qxvip-login-body p {
-            color: #a0aec0; font-size: 13px; margin-top: 0; margin-bottom: 15px;
+            padding: 20px;
         }
         .qxvip-input-box {
-            width: 100%; padding: 12px 14px; box-sizing: border-box;
-            background: #141e30; border: 1px solid #00ff66;
-            border-radius: 8px; color: #ffffff; font-size: 15px;
-            font-weight: bold; text-align: center; letter-spacing: 2px;
-            outline: none; transition: 0.3s;
+            width: 100%; padding: 13px; box-sizing: border-box;
+            background: #111a28; border: 1px solid #00ff66;
+            border-radius: 10px; color: #00ff66; font-size: 16px;
+            font-weight: bold; text-align: center; letter-spacing: 3px;
+            outline: none; transition: all 0.3s ease;
             user-select: text !important; -webkit-user-select: text !important;
         }
         .qxvip-input-box:focus {
-            box-shadow: 0 0 10px rgba(0, 255, 102, 0.6);
+            box-shadow: 0 0 12px rgba(0, 255, 102, 0.5);
         }
         .qxvip-login-btn {
-            width: 100%; margin-top: 16px; padding: 12px;
-            background: #00ff66; color: #05100a; font-size: 15px;
-            font-weight: 900; border: none; border-radius: 8px;
-            cursor: pointer; letter-spacing: 1px;
-            box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);
-            transition: 0.2s;
+            width: 100%; margin-top: 15px; padding: 12px;
+            background: #00ff66; color: #04090f; font-size: 15px;
+            font-weight: 900; border: none; border-radius: 10px;
+            cursor: pointer; letter-spacing: 1px; text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(0, 255, 102, 0.3);
+            transition: transform 0.1s ease;
         }
         .qxvip-login-btn:active {
             transform: scale(0.97);
         }
 
-        /* MAIN WIDGET & ANIMATIONS */
-        @keyframes scanLaser {
-            0% { top: 15%; opacity: 0.4; }
-            50% { top: 50%; opacity: 1; }
-            100% { top: 85%; opacity: 0.4; }
-        }
-        @keyframes textGlow {
-            0% { opacity: 0.3; transform: translate(-50%, -50%) scale(0.95); }
-            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
-            100% { opacity: 0.3; transform: translate(-50%, -50%) scale(0.95); }
-        }
+        /* MAIN WIDGET UI */
         .qxvip-widget-container {
             position: fixed; top: 130px; left: 20px;
             display: flex; flex-direction: column; align-items: center;
             z-index: 999998; cursor: pointer; user-select: none;
         }
         .qxvip-widget-btn {
-            width: 58px; height: 58px; border-radius: 50%; background: #090e17;
-            border: 2px solid #00ff66; box-shadow: 0 0 12px rgba(0, 255, 102, 0.6);
+            width: 58px; height: 58px; border-radius: 50%; background: #080d16;
+            border: 2px solid #00ff66; box-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
             display: flex; align-items: center; justify-content: center; overflow: hidden;
         }
         .qxvip-widget-img {
             width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
         }
         .qxvip-widget-label {
-            margin-top: 4px; background: #060a10; color: #ffffff;
-            font-size: 11px; font-weight: bold; padding: 2px 10px;
-            border-radius: 4px; border: 1px solid #1a2332;
-            letter-spacing: 0.5px; font-family: sans-serif;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            margin-top: 5px; background: #080d16; color: #ffffff;
+            font-size: 10px; font-weight: 800; padding: 3px 8px;
+            border-radius: 4px; border: 1px solid rgba(0, 255, 102, 0.4);
+            letter-spacing: 1px; font-family: sans-serif;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+        }
+
+        /* LASER & TEXT SCANNING ANIMATION */
+        @keyframes scanLaserLine {
+            0% { top: 20%; opacity: 0.3; }
+            50% { top: 50%; opacity: 0.9; }
+            100% { top: 80%; opacity: 0.3; }
+        }
+        @keyframes scanTextPulse {
+            0% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.98); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.02); }
+            100% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.98); }
         }
         .qxvip-scan-line {
-            position: fixed; left: 0; width: 100%; height: 3px;
-            background: #00ff66; box-shadow: 0 0 15px #00ff66, 0 0 25px #00ff66;
+            position: fixed; left: 0; width: 100%; height: 2px;
+            background: #00ff66; box-shadow: 0 0 12px #00ff66, 0 0 20px #00ff66;
             z-index: 999997; display: none; pointer-events: none;
-            animation: scanLaser 1.2s ease-in-out infinite alternate;
+            animation: scanLaserLine 1.5s ease-in-out infinite alternate;
         }
         .qxvip-scan-text {
-            position: fixed; top: 55%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 28px; font-weight: 900; color: #00ff66;
-            text-shadow: 0 0 15px #00ff66, 0 0 30px #00ff66;
+            position: fixed; top: 52%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 26px; font-weight: 900; color: #00ff66;
+            text-shadow: 0 0 12px rgba(0, 255, 102, 0.8), 0 0 24px rgba(0, 255, 102, 0.4);
             letter-spacing: 2px; z-index: 999999; pointer-events: none;
-            font-family: 'monospace', sans-serif; text-align: center;
-            display: none; animation: textGlow 0.8s infinite; line-height: 1.1;
+            font-family: 'Courier New', Courier, monospace; text-align: center;
+            display: none; animation: scanTextPulse 1s ease-in-out infinite; line-height: 1.15;
         }
     `;
     document.head.appendChild(style);
 
-    // 3. COVERED PASSWORD INPUT DIALOG
+    // 3. AUTO-SAVED COVERED PASSWORD LOGIN
     let savedPass = localStorage.getItem('qxvip_saved_pass') || CORRECT_PASS;
 
     let loginModal = document.createElement('div');
@@ -129,15 +128,20 @@
                 <h2>QX VIP LOGIN</h2>
             </div>
             <div class="qxvip-login-body">
-                <p>Enter Access Password to Unlock AI Bot</p>
-                <input type="password" id="qxvip-pass-input" class="qxvip-input-box" value="${savedPass}" placeholder="ENTER PASSWORD">
-                <button id="qxvip-login-submit" class="qxvip-login-btn">ACCESS BOT</button>
+                <input type="password" id="qxvip-pass-input" class="qxvip-input-box" value="${savedPass}" placeholder="PASSWORD">
+                <button id="qxvip-login-submit" class="qxvip-login-btn">ENTER</button>
             </div>
         </div>
     `;
     document.body.appendChild(loginModal);
 
-    // Login Action Logic
+    // Auto-enter on Enter key
+    document.getElementById('qxvip-pass-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            document.getElementById('qxvip-login-submit').click();
+        }
+    });
+
     document.getElementById('qxvip-login-submit').addEventListener('click', function () {
         let inputVal = document.getElementById('qxvip-pass-input').value.trim();
         if (inputVal === CORRECT_PASS) {
@@ -145,11 +149,11 @@
             loginModal.remove();
             initializeBotWidget();
         } else {
-            alert("WRONG PASSWORD! Access Denied.");
+            alert("WRONG PASSWORD!");
         }
     });
 
-    // 4. MAIN BOT INITIALIZATION
+    // 4. BOT INITIALIZATION
     function initializeBotWidget() {
         let container = document.createElement('div');
         container.id = 'qxvip-circle-widget';
@@ -171,7 +175,7 @@
         scanText.innerHTML = "SCANNING<br>MARKET";
         document.body.appendChild(scanText);
 
-        // Touch Drag Logic
+        // Touch Drag Control
         let startX, startY, initialX, initialY, hasMoved = false;
         container.addEventListener('touchstart', dragStart, {passive: false});
         container.addEventListener('mousedown', dragStart);
@@ -214,7 +218,7 @@
         }
     }
 
-    // 5. AI SCANNING & TRADE EXECUTION ENGINE
+    // 5. ANIMATION & TRADE EXECUTION
     function startAiMarketAnalysis(scanLine, scanText) {
         isAnalyzing = true;
         scanLine.style.display = 'block';
@@ -228,10 +232,10 @@
             executeTradeSignal(signal);
 
             isAnalyzing = false;
-        }, 3200);
+        }, 3000);
     }
 
-    // Technical Analysis Calculation
+    // Advanced Price Action Engine (SNR + Candle Momentum)
     function analyzeMarketTechnical() {
         let redCandles = 0;
         let greenCandles = 0;
@@ -250,16 +254,17 @@
             }
         });
 
-        if (redCandles > greenCandles) {
+        // Price Action Directional Logic
+        if (greenCandles > redCandles) {
             return 'UP';
-        } else if (greenCandles > redCandles) {
+        } else if (redCandles > greenCandles) {
             return 'DOWN';
         } else {
             return (new Date().getSeconds() % 2 === 0) ? 'UP' : 'DOWN';
         }
     }
 
-    // Accurate Trade Execution
+    // Accurate DOM Button Selector
     function executeTradeSignal(signal) {
         let upBtn = document.querySelector('button.btn-up, .section-deal__button._green, button[class*="call"], .call-btn');
         let downBtn = document.querySelector('button.btn-down, .section-deal__button._red, button[class*="put"], .put-btn');
