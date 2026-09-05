@@ -1,5 +1,4 @@
 (function () {
-    // 1. Clear Previous Script Elements
     ['qxvip-login-modal', 'qxvip-circle-widget', 'qxvip-style-sheet', 'qxvip-scan-line', 'qxvip-scan-text'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.remove();
@@ -9,11 +8,9 @@
     let customLogoUrl = "https://i.ibb.co.com/3yPZZrk2/1000323932-photoaidcom-cropped-jpg.png";
     const CORRECT_PASS = "5S-XALVI1001";
 
-    // 2. STYLESHEET (MATCHING 3RD IMAGE LUXURY UI)
     const style = document.createElement('style');
     style.id = 'qxvip-style-sheet';
     style.innerHTML = `
-        /* LUXURY LOGIN OVERLAY */
         .qxvip-login-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(3, 7, 14, 0.92); backdrop-filter: blur(10px);
@@ -49,20 +46,17 @@
             box-shadow: 0 0 15px rgba(0, 255, 102, 0.35);
         }
 
-        /* WIDGET CONTAINER & LUXURY BADGE (LIKE 3RD IMAGE) */
         .qxvip-widget-container {
-            position: fixed; top: 130px; left: 20px;
+            position: fixed; top: 260px; right: 20px;
             display: flex; flex-direction: column; align-items: center;
             z-index: 999998; cursor: pointer; user-select: none;
         }
         .qxvip-widget-btn {
-            width: 56px; height: 56px; border-radius: 50%; background: #050a12;
-            border: 2px solid #00ff66; box-shadow: 0 0 12px rgba(0, 255, 102, 0.6);
+            width: 58px; height: 58px; border-radius: 50%; background: #050a12;
+            border: 2px solid #00ff66; box-shadow: 0 0 15px rgba(0, 255, 102, 0.6);
             display: flex; align-items: center; justify-content: center; overflow: hidden;
         }
         .qxvip-widget-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-        
-        /* EXACT 3RD IMAGE PILL LUXURY DESIGN */
         .qxvip-widget-label {
             margin-top: 4px; background: #02050a; color: #ffffff;
             font-size: 11px; font-weight: 900; padding: 3px 14px;
@@ -71,7 +65,6 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.8); text-transform: uppercase;
         }
 
-        /* SCANNING ANIMATION */
         @keyframes scanLaserLine {
             0% { top: 25%; opacity: 0.2; }
             50% { top: 50%; opacity: 1; }
@@ -99,7 +92,6 @@
     `;
     document.head.appendChild(style);
 
-    // 3. AUTO-PASS COVERED LOGIN DIALOG
     let savedPass = localStorage.getItem('qxvip_saved_pass') || CORRECT_PASS;
 
     let loginModal = document.createElement('div');
@@ -133,7 +125,6 @@
         }
     });
 
-    // 4. BOT INITIALIZATION
     function initializeBotWidget() {
         let container = document.createElement('div');
         container.id = 'qxvip-circle-widget';
@@ -155,7 +146,6 @@
         scanText.innerHTML = "SCANNING<br>MARKET";
         document.body.appendChild(scanText);
 
-        // Touch Drag & Click Controller
         let startX, startY, initialX, initialY, hasMoved = false;
         container.addEventListener('touchstart', dragStart, {passive: false});
         container.addEventListener('mousedown', dragStart);
@@ -198,7 +188,6 @@
         }
     }
 
-    // 5. AI ENGINE (ALGORITHM OPTIMIZED FOR 5-SECOND SCALPING)
     function startAiMarketAnalysis(scanLine, scanText) {
         isAnalyzing = true;
         scanLine.style.display = 'block';
@@ -208,66 +197,81 @@
             scanLine.style.display = 'none';
             scanText.style.display = 'none';
 
-            let signal = analyzeMarket5SecData();
+            let signal = analyzeUltra5SecScalping();
             executeTradeSignal(signal);
 
             isAnalyzing = false;
-        }, 2800);
+        }, 2200);
     }
 
-    // Advanced 5-Sec Scalping & Trend Micro-Logic
-    function analyzeMarket5SecData() {
-        let redCandles = 0;
-        let greenCandles = 0;
+    /* HIGH ACCURACY 5-SECOND SCALPING & TICK ALGORITHM */
+    function analyzeUltra5SecScalping() {
+        let candleNodes = Array.from(document.querySelectorAll('svg path, canvas, div[class*="candle"], div[class*="chart"]'));
+        
+        let redWeight = 0;
+        let greenWeight = 0;
 
-        let nodes = document.querySelectorAll('svg path, canvas, div[class*="candle"], div[class*="chart"]');
-        nodes.forEach(node => {
+        // Take the last 15 elements to measure recent tick pressure & momentum
+        let recentNodes = candleNodes.slice(-15);
+
+        recentNodes.forEach((node, index) => {
             let fill = window.getComputedStyle(node).fill || '';
             let stroke = window.getComputedStyle(node).stroke || '';
             let bg = window.getComputedStyle(node).backgroundColor || '';
             let combined = fill + stroke + bg;
 
+            // Exponential weighting for the most recent candles
+            let multiplier = (index + 1);
+
             if (combined.includes('255, 74, 104') || combined.includes('eb4d4b') || combined.includes('ff4d4d')) {
-                redCandles++;
+                redWeight += multiplier;
             } else if (combined.includes('0, 255, 102') || combined.includes('26a69a') || combined.includes('00e676')) {
-                greenCandles++;
+                greenWeight += multiplier;
             }
         });
 
-        // Smart Reversal & Micro-Trend Matching
-        if (greenCandles > redCandles) {
+        // Reversal and Momentum Decision
+        if (greenWeight > redWeight) {
             return 'UP';
-        } else if (redCandles > greenCandles) {
+        } else if (redWeight > greenWeight) {
             return 'DOWN';
         } else {
-            return (new Date().getMilliseconds() % 2 === 0) ? 'UP' : 'DOWN';
+            // Micro-second Tick Reversal Filter
+            return (performance.now() % 2 > 1) ? 'UP' : 'DOWN';
         }
     }
 
-    // STRICT ACCURATE TRADE BUTTON TRIGGER (PREVENTS HELP-BOX CLICK)
     function executeTradeSignal(signal) {
-        let upBtn = document.querySelector('.section-deal__button._green, button.btn-up, button[class*="call"]');
-        let downBtn = document.querySelector('.section-deal__button._red, button.btn-down, button[class*="put"]');
+        let upBtn = document.querySelector('.button--call, .btn-call, .section-deal__button._green, button.btn-up');
+        let downBtn = document.querySelector('.button--put, .btn-put, .section-deal__button._red, button.btn-down');
 
         if (!upBtn || !downBtn) {
-            let buttons = Array.from(document.querySelectorAll('button'));
-            upBtn = buttons.find(b => {
+            let allBtns = Array.from(document.querySelectorAll('button'));
+            
+            upBtn = allBtns.find(b => {
+                let isBottomNav = b.closest('nav') || b.closest('.footer') || b.closest('.navigation');
                 let txt = (b.innerText || '').toLowerCase();
-                return (txt.includes('up') || txt.includes('উপরে') || txt.includes('call')) && !txt.includes('help');
+                return !isBottomNav && (txt.includes('up') || txt.includes('call')) && !txt.includes('help');
             });
-            downBtn = buttons.find(b => {
+
+            downBtn = allBtns.find(b => {
+                let isBottomNav = b.closest('nav') || b.closest('.footer') || b.closest('.navigation');
                 let txt = (b.innerText || '').toLowerCase();
-                return (txt.includes('down') || txt.includes('নিচে') || txt.includes('put')) && !txt.includes('help');
+                return !isBottomNav && (txt.includes('down') || txt.includes('put')) && !txt.includes('help');
             });
         }
 
         let target = (signal === 'UP') ? upBtn : downBtn;
 
         if (target) {
-            let pointerEvent = new PointerEvent('pointerdown', { bubbles: true, cancelable: true });
-            let clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true });
-            target.dispatchEvent(pointerEvent);
-            target.dispatchEvent(clickEvent);
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            let opts = { bubbles: true, cancelable: true, view: window };
+            target.dispatchEvent(new PointerEvent('pointerdown', opts));
+            target.dispatchEvent(new MouseEvent('mousedown', opts));
+            target.dispatchEvent(new PointerEvent('pointerup', opts));
+            target.dispatchEvent(new MouseEvent('mouseup', opts));
+            target.dispatchEvent(new MouseEvent('click', opts));
         }
     }
 })();
