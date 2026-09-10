@@ -1,295 +1,386 @@
 (function () {
-    ['qxvip-login-modal', 'qxvip-circle-widget', 'qxvip-style-sheet', 'qxvip-scan-line', 'qxvip-scan-text'].forEach(id => {
+    ['qx999-circle-bot', 'qx999-panel', 'qx999-login', 'qx999-scan-canvas', 'qx999-settings'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.remove();
     });
 
-    let isAnalyzing = false;
-    let customLogoUrl = "https://i.ibb.co.com/3yPZZrk2/1000323932-photoaidcom-cropped-jpg.png";
-    const CORRECT_PASS = "5S-XALVI1001";
+    let licenseKey = "Alvi1234";
+    let logoUrl = "https://i.ibb.co.com/5hPpvrTB/Firefly-Remove-Background.png";
+    let scanDurationSec = 5; 
+    let afterTradeScanSec = 5;
+    let configuredTradeDirection = "Random"; // "Up", "Down", "Random"
+    let isConfigured = false; 
+
+    let greenForce = 0;
+    let redForce = 0;
+    let analysisTimer = null;
+    let tradeExecuted = false;
+    let selectedSignal = "UP";
+
+    let visitCount = parseInt(localStorage.getItem("qx999_visits") || "0") + 1;
+    localStorage.setItem("qx999_visits", visitCount);
+    let shouldPreFill = visitCount > 1;
 
     const style = document.createElement('style');
-    style.id = 'qxvip-style-sheet';
     style.innerHTML = `
-        .qxvip-login-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(3, 7, 14, 0.92); backdrop-filter: blur(10px);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 9999999; font-family: 'Segoe UI', system-ui, sans-serif;
+        #qx999-circle-bot {
+            position: fixed; top: 120px; right: 20px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 999999; cursor: move; user-select: none; touch-action: none;
+            padding: 4px; border-radius: 50%;
         }
-        .qxvip-login-card {
-            width: 300px; background: #070d17;
-            border: 1px solid rgba(0, 255, 102, 0.5); border-radius: 18px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.9), 0 0 20px rgba(0, 255, 102, 0.2);
-            overflow: hidden; text-align: center;
+        #qx999-logo-icon {
+            width: 65px; height: 65px;
+            background-color: #0c150e;
+            background-image: url('${logoUrl}');
+            background-position: center center;
+            background-size: 88%;
+            background-repeat: no-repeat;
+            border-radius: 50%;
+            border: 2px solid #e58e26; /* বাম পাশের বটের মতো গোল রিং বর্ডার */
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9), inset 0 2px 4px rgba(255,255,255,0.15); /* বাম পাশের বটের মতো পারফেক্ট ডার্ক শ্যাডো */
+            pointer-events: none;
+            transition: all 0.3s ease-in-out;
+            transform: translateX(4px);
         }
-        .qxvip-login-header {
-            background: linear-gradient(180deg, rgba(0,255,102,0.12) 0%, rgba(7,13,23,0) 100%);
-            padding: 18px 15px 10px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        #qx999-circle-bot.glowing #qx999-logo-icon {
+            box-shadow: 0 0 25px rgba(0, 255, 102, 0.7), 0 6px 18px rgba(0, 0, 0, 0.9) !important;
+            border-color: #00ff66 !important;
+            transform: translateX(4px) !important;
         }
-        .qxvip-login-header h2 {
-            margin: 0; color: #00ff66; font-size: 18px; font-weight: 800;
-            letter-spacing: 2px; text-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
+        #qx999-circle-bot span {
+            color: #ffffff !important; font-weight: bold; font-size: 13px;
+            margin-top: 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-family: Arial, sans-serif; pointer-events: none;
         }
-        .qxvip-login-body { padding: 20px; }
-        .qxvip-input-box {
-            width: 100%; padding: 12px; box-sizing: border-box;
-            background: #0f1826; border: 1px solid #00ff66;
-            border-radius: 10px; color: #00ff66; font-size: 16px;
-            font-weight: bold; text-align: center; letter-spacing: 4px; outline: none;
-            user-select: text !important; -webkit-user-select: text !important;
+        ::placeholder { color: #777777; }
+        
+        .qx-dir-btn {
+            width: 100%; padding: 12px; background: #070d09; color: #fff;
+            border: 1px solid #1a3322; border-radius: 12px; font-weight: 600;
+            font-size: 15px; cursor: pointer; margin-bottom: 8px; text-align: center;
+            transition: all 0.2s;
         }
-        .qxvip-login-btn {
-            width: 100%; margin-top: 15px; padding: 12px;
-            background: #00ff66; color: #03070e; font-size: 14px; font-weight: 900;
-            border: none; border-radius: 10px; cursor: pointer; letter-spacing: 1px;
-            box-shadow: 0 0 15px rgba(0, 255, 102, 0.35);
-        }
-
-        .qxvip-widget-container {
-            position: fixed; top: 260px; right: 20px;
-            display: flex; flex-direction: column; align-items: center;
-            z-index: 999998; cursor: pointer; user-select: none;
-        }
-        .qxvip-widget-btn {
-            width: 58px; height: 58px; border-radius: 50%; background: #050a12;
-            border: 2px solid #00ff66; box-shadow: 0 0 15px rgba(0, 255, 102, 0.6);
-            display: flex; align-items: center; justify-content: center; overflow: hidden;
-        }
-        .qxvip-widget-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-        .qxvip-widget-label {
-            margin-top: 4px; background: #02050a; color: #ffffff;
-            font-size: 11px; font-weight: 900; padding: 3px 14px;
-            border-radius: 20px; border: 1.5px solid #1e293b;
-            letter-spacing: 1px; font-family: sans-serif;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.8); text-transform: uppercase;
-        }
-
-        @keyframes scanLaserLine {
-            0% { top: 25%; opacity: 0.2; }
-            50% { top: 50%; opacity: 1; }
-            100% { top: 75%; opacity: 0.2; }
-        }
-        @keyframes scanTextPulse {
-            0% { opacity: 0.4; transform: translate(-50%, -50%) scale(0.97); }
-            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.03); }
-            100% { opacity: 0.4; transform: translate(-50%, -50%) scale(0.97); }
-        }
-        .qxvip-scan-line {
-            position: fixed; left: 0; width: 100%; height: 3px;
-            background: #00ff66; box-shadow: 0 0 15px #00ff66, 0 0 25px #00ff66;
-            z-index: 999997; display: none; pointer-events: none;
-            animation: scanLaserLine 1.2s ease-in-out infinite alternate;
-        }
-        .qxvip-scan-text {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 26px; font-weight: 900; color: #00ff66;
-            text-shadow: 0 0 15px rgba(0, 255, 102, 0.9);
-            letter-spacing: 2px; z-index: 999999; pointer-events: none;
-            font-family: 'Courier New', monospace; text-align: center;
-            display: none; animation: scanTextPulse 0.8s ease-in-out infinite; line-height: 1.15;
+        .qx-dir-btn.active {
+            background: #00ff66; color: #000; border-color: #00ff66;
+            box-shadow: 0 0 15px rgba(0,255,102,0.4);
         }
     `;
     document.head.appendChild(style);
 
-    let savedPass = localStorage.getItem('qxvip_saved_pass') || CORRECT_PASS;
-
-    let loginModal = document.createElement('div');
-    loginModal.id = 'qxvip-login-modal';
-    loginModal.className = 'qxvip-login-overlay';
-    loginModal.innerHTML = `
-        <div class="qxvip-login-card">
-            <div class="qxvip-login-header">
-                <h2>QX VIP LOGIN</h2>
-            </div>
-            <div class="qxvip-login-body">
-                <input type="password" id="qxvip-pass-input" class="qxvip-input-box" value="${savedPass}" placeholder="ENTER PASS">
-                <button id="qxvip-login-submit" class="qxvip-login-btn">ENTER BOT</button>
-            </div>
-        </div>
+    // Login Box (১ম ছবির মতো হুবহু)
+    let loginBox = document.createElement('div');
+    loginBox.id = 'qx999-login';
+    loginBox.style.cssText = `
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        width: 330px; background: #0c150e; border: 1.5px solid #00ff66;
+        color: #ffffff; padding: 35px 24px 30px 24px; border-radius: 24px;
+        box-shadow: 0 0 25px rgba(0,255,102,0.15); z-index: 999999;
+        font-family: sans-serif; text-align: center; display: block;
     `;
-    document.body.appendChild(loginModal);
+    loginBox.innerHTML = `
+        <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px; font-weight:500;">QX999 Login</h3>
+        <p style="font-size:14px; color:#cccccc; margin:0 0 25px 0;">Enter password to continue</p>
+        <input type="password" id="qx_pass" value="${shouldPreFill ? licenseKey : ''}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #00ff66; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px;">
+        <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:600; font-size:17px; cursor:pointer;">Enter</button>
+    `;
+    document.body.appendChild(loginBox);
 
-    document.getElementById('qxvip-pass-input').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') document.getElementById('qxvip-login-submit').click();
+    // Settings Box (২য় ছবির মতো হুবহু)
+    let settingsBox = document.createElement('div');
+    settingsBox.id = 'qx999-settings';
+    settingsBox.style.cssText = `
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        width: 330px; background: #0c150e; border: 1.5px solid #00ff66;
+        color: #ffffff; padding: 24px; border-radius: 24px;
+        box-shadow: 0 0 25px rgba(0,255,102,0.15); z-index: 999999;
+        font-family: Arial, sans-serif; display: none; max-height: 90vh; overflow-y: auto;
+    `;
+    settingsBox.innerHTML = `
+        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:20px; text-align:center; font-weight:bold;">QX999 Settings</h3>
+        
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Scan delay (seconds)</label>
+        <input type="number" id="qx_scan_delay" value="5" min="2" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:12px; outline:none; font-size:16px;">
+        
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:2px;">After trade scan (seconds)</label>
+        <span style="font-size:11px; color:#777; display:block; margin-bottom:5px;">0 = stop only when you tap the icon</span>
+        <input type="number" id="qx_after_delay" value="5" min="0" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:15px; outline:none; font-size:16px;">
+        
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:8px;">Trade direction</label>
+        <div id="qx_dir_up" class="qx-dir-btn">Up</div>
+        <div id="qx_dir_down" class="qx-dir-btn">Down</div>
+        <div id="qx_dir_random" class="qx-dir-btn active">Random</div>
+        
+        <button id="qx_save_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; margin-top:10px;">Save</button>
+        <p style="font-size:11px; color:#777; text-align:center; margin-top:12px; margin-bottom:0;">3 taps on icon to open · tap outside to close</p>
+    `;
+    document.body.appendChild(settingsBox);
+
+    ['Up', 'Down', 'Random'].forEach(dir => {
+        let btnId = dir === 'Up' ? 'qx_dir_up' : (dir === 'Down' ? 'qx_dir_down' : 'qx_dir_random');
+        document.getElementById(btnId).onclick = function () {
+            document.querySelectorAll('.qx-dir-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            configuredTradeDirection = dir;
+        };
     });
 
-    document.getElementById('qxvip-login-submit').addEventListener('click', function () {
-        let inputVal = document.getElementById('qxvip-pass-input').value.trim();
-        if (inputVal === CORRECT_PASS) {
-            localStorage.setItem('qxvip_saved_pass', inputVal);
-            loginModal.remove();
-            initializeBotWidget();
-        } else {
-            alert("WRONG PASSWORD!");
-        }
-    });
+    let botContainer = document.createElement('div');
+    botContainer.id = 'qx999-circle-bot';
+    botContainer.style.display = 'none';
 
-    function initializeBotWidget() {
-        let container = document.createElement('div');
-        container.id = 'qxvip-circle-widget';
-        container.className = 'qxvip-widget-container';
-        container.innerHTML = `
-            <div class="qxvip-widget-btn">
-                <img src="${customLogoUrl}" class="qxvip-widget-img" alt="QX VIP">
-            </div>
-            <div class="qxvip-widget-label">QX VIP</div>
-        `;
-        document.body.appendChild(container);
+    let logoIcon = document.createElement('div');
+    logoIcon.id = 'qx999-logo-icon';
+    let logoText = document.createElement('span');
+    logoText.innerText = "QX999";
 
-        let scanLine = document.createElement('div');
-        scanLine.className = 'qxvip-scan-line';
-        document.body.appendChild(scanLine);
+    botContainer.appendChild(logoIcon);
+    botContainer.appendChild(logoText);
+    document.body.appendChild(botContainer);
 
-        let scanText = document.createElement('div');
-        scanText.className = 'qxvip-scan-text';
-        scanText.innerHTML = "SCANNING<br>MARKET";
-        document.body.appendChild(scanText);
+    let isDragging = false, hasMoved = false;
+    let startX = 0, startY = 0, initialX = 0, initialY = 0;
 
-        let startX, startY, initialX, initialY, hasMoved = false;
-        container.addEventListener('touchstart', dragStart, {passive: false});
-        container.addEventListener('mousedown', dragStart);
+    function dragStart(e) {
+        hasMoved = false;
+        let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+        startX = clientX; startY = clientY;
+        let rect = botContainer.getBoundingClientRect();
+        initialX = rect.left; initialY = rect.top;
+        botContainer.style.right = 'auto';
+        botContainer.style.left = initialX + 'px';
+        botContainer.style.top = initialY + 'px';
 
-        function dragStart(e) {
-            hasMoved = false;
-            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            startX = clientX; startY = clientY;
-            initialX = container.offsetLeft; initialY = container.offsetTop;
-
-            document.addEventListener('touchmove', dragMove, {passive: false});
+        if (e.type === 'mousedown') {
             document.addEventListener('mousemove', dragMove);
-            document.addEventListener('touchend', dragEnd);
             document.addEventListener('mouseup', dragEnd);
-        }
-
-        function dragMove(e) {
-            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            if (Math.abs(clientX - startX) > 5 || Math.abs(clientY - startY) > 5) {
-                hasMoved = true;
-            }
-            if (hasMoved) {
-                if (e.cancelable) e.preventDefault();
-                container.style.left = (initialX + (clientX - startX)) + 'px';
-                container.style.top = (initialY + (clientY - startY)) + 'px';
-            }
-        }
-
-        function dragEnd() {
-            document.removeEventListener('touchmove', dragMove);
-            document.removeEventListener('mousemove', dragMove);
-            document.removeEventListener('touchend', dragEnd);
-            document.removeEventListener('mouseup', dragEnd);
-
-            if (!hasMoved && !isAnalyzing) {
-                startAiMarketAnalysis(scanLine, scanText);
-            }
-        }
-    }
-
-    function startAiMarketAnalysis(scanLine, scanText) {
-        isAnalyzing = true;
-        scanLine.style.display = 'block';
-        scanText.style.display = 'block';
-
-        setTimeout(() => {
-            scanLine.style.display = 'none';
-            scanText.style.display = 'none';
-
-            let signal = analyzeHighPrecisionEngine();
-            executeTradeSignal(signal);
-
-            isAnalyzing = false;
-        }, 2200);
-    }
-
-    /* HIGH PRECISION ADVANCED ANALYTICS ENGINE */
-    function analyzeHighPrecisionEngine() {
-        let candleNodes = Array.from(document.querySelectorAll('svg path, canvas, div[class*="candle"], div[class*="chart"]'));
-        
-        if (candleNodes.length === 0) {
-            return (Math.random() > 0.5) ? 'UP' : 'DOWN';
-        }
-
-        let totalScoreGreen = 0;
-        let totalScoreRed = 0;
-        
-        let sampleSize = Math.min(25, candleNodes.length);
-        let recentNodes = candleNodes.slice(-sampleSize);
-
-        recentNodes.forEach((node, idx) => {
-            let fill = window.getComputedStyle(node).fill || '';
-            let stroke = window.getComputedStyle(node).stroke || '';
-            let bg = window.getComputedStyle(node).backgroundColor || '';
-            let combined = (fill + stroke + bg).toLowerCase();
-
-            // Exponential Trend & Recency Weighting
-            let positionWeight = Math.pow(1.2, idx);
-
-            let isGreen = combined.includes('0, 255') || combined.includes('26a69a') || combined.includes('00e676') || combined.includes('green');
-            let isRed = combined.includes('255, 74') || combined.includes('eb4d4b') || combined.includes('ff4d4d') || combined.includes('red');
-
-            if (isGreen) {
-                totalScoreGreen += positionWeight;
-            } else if (isRed) {
-                totalScoreRed += positionWeight;
-            }
-        });
-
-        // Micro RSI & Reversal Threshold Analysis
-        let totalScore = totalScoreGreen + totalScoreRed;
-        let greenRatio = totalScore > 0 ? (totalScoreGreen / totalScore) : 0.5;
-
-        // Overbought (> 0.78) -> Potential Down Reversal
-        // Oversold (< 0.22) -> Potential Up Reversal
-        if (greenRatio > 0.78) {
-            return 'DOWN';
-        } else if (greenRatio < 0.22) {
-            return 'UP';
-        }
-
-        // Direct Trend Momentum Execution
-        if (totalScoreGreen > totalScoreRed) {
-            return 'UP';
-        } else if (totalScoreRed > totalScoreGreen) {
-            return 'DOWN';
         } else {
-            return (performance.now() % 2 > 1) ? 'UP' : 'DOWN';
+            document.addEventListener('touchmove', dragMove, { passive: false });
+            document.addEventListener('touchend', dragEnd);
         }
     }
 
-    function executeTradeSignal(signal) {
-        let upBtn = document.querySelector('.button--call, .btn-call, .section-deal__button._green, button.btn-up');
-        let downBtn = document.querySelector('.button--put, .btn-put, .section-deal__button._red, button.btn-down');
-
-        if (!upBtn || !downBtn) {
-            let allBtns = Array.from(document.querySelectorAll('button'));
-            
-            upBtn = allBtns.find(b => {
-                let isBottomNav = b.closest('nav') || b.closest('.footer') || b.closest('.navigation');
-                let txt = (b.innerText || '').toLowerCase();
-                return !isBottomNav && (txt.includes('up') || txt.includes('call')) && !txt.includes('help');
-            });
-
-            downBtn = allBtns.find(b => {
-                let isBottomNav = b.closest('nav') || b.closest('.footer') || b.closest('.navigation');
-                let txt = (b.innerText || '').toLowerCase();
-                return !isBottomNav && (txt.includes('down') || txt.includes('put')) && !txt.includes('help');
-            });
+    function dragMove(e) {
+        let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+        let dx = clientX - startX, dy = clientY - startY;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+            hasMoved = true; isDragging = true;
+            if (e.cancelable) e.preventDefault();
         }
-
-        let target = (signal === 'UP') ? upBtn : downBtn;
-
-        if (target) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            let opts = { bubbles: true, cancelable: true, view: window };
-            target.dispatchEvent(new PointerEvent('pointerdown', opts));
-            target.dispatchEvent(new MouseEvent('mousedown', opts));
-            target.dispatchEvent(new PointerEvent('pointerup', opts));
-            target.dispatchEvent(new MouseEvent('mouseup', opts));
-            target.dispatchEvent(new MouseEvent('click', opts));
+        if (isDragging) {
+            botContainer.style.left = (initialX + dx) + 'px';
+            botContainer.style.top = (initialY + dy) + 'px';
         }
     }
+
+    function dragEnd() {
+        document.removeEventListener('mousemove', dragMove);
+        document.removeEventListener('mouseup', dragEnd);
+        document.removeEventListener('touchmove', dragMove);
+        document.removeEventListener('touchend', dragEnd);
+        setTimeout(() => { isDragging = false; }, 50);
+    }
+
+    botContainer.addEventListener('mousedown', dragStart);
+    botContainer.addEventListener('touchstart', dragStart, { passive: false });
+
+    let scanCanvas = document.createElement('canvas');
+    scanCanvas.id = 'qx999-scan-canvas';
+    scanCanvas.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        pointer-events: none; z-index: 999998; display: none;
+    `;
+    document.body.appendChild(scanCanvas);
+    let ctx = scanCanvas.getContext('2d');
+
+    function resizeCanvas() {
+        scanCanvas.width = window.innerWidth;
+        scanCanvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
+
+    function startRealTimeAnalysis() {
+        greenForce = 0;
+        redForce = 0;
+
+        analysisTimer = setInterval(() => {
+            let svgElements = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
+            svgElements.forEach(el => {
+                let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
+                let className = (el.getAttribute('class') || '').toLowerCase();
+
+                let weight = 30;
+                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
+                    greenForce += weight;
+                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
+                    redForce += weight;
+                }
+            });
+
+            let priceNodes = Array.from(document.querySelectorAll('span, div'))
+                .map(e => e.innerText ? e.innerText.trim() : '')
+                .filter(t => /^\d+\.\d+$/.test(t));
+
+            if (priceNodes.length >= 3) {
+                let current = parseFloat(priceNodes[priceNodes.length - 1]);
+                let prev = parseFloat(priceNodes[priceNodes.length - 2]);
+                let multiplier = 75;
+                if (current > prev) {
+                    greenForce += multiplier;
+                } else if (current < prev) {
+                    redForce += multiplier;
+                }
+            }
+        }, 20);
+    }
+
+    function drawSmokeScanLine() {
+        let currentTime = Date.now();
+        let elapsedSec = (currentTime - scanStartTime) / 1000;
+
+        if (elapsedSec >= scanDurationSec) {
+            finishScan();
+            return;
+        }
+
+        ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
+
+        let trailHeight = 160;
+        let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
+        grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
+        grad.addColorStop(0.3, 'rgba(0, 255, 102, 0.08)');
+        grad.addColorStop(0.7, 'rgba(0, 255, 102, 0.25)');
+        grad.addColorStop(1, 'rgba(0, 255, 102, 0.7)');
+
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, Math.max(0, scanY - trailHeight), scanCanvas.width, trailHeight);
+
+        ctx.beginPath();
+        ctx.strokeStyle = '#00ff66';
+        ctx.lineWidth = 4;
+        ctx.shadowColor = '#00ff66';
+        ctx.shadowBlur = 25;
+        ctx.moveTo(0, scanY);
+        ctx.lineTo(scanCanvas.width, scanY);
+        ctx.stroke();
+
+        scanY += 8.5;
+        if (scanY > scanCanvas.height) {
+            scanY = 0;
+        }
+
+        if (elapsedSec >= (scanDurationSec - 0.3) && !tradeExecuted) {
+            tradeExecuted = true;
+            
+            if (configuredTradeDirection === "Up") {
+                selectedSignal = "UP";
+            } else if (configuredTradeDirection === "Down") {
+                selectedSignal = "DOWN";
+            } else {
+                if (greenForce > redForce) {
+                    selectedSignal = "UP";
+                } else if (redForce > greenForce) {
+                    selectedSignal = "DOWN";
+                } else {
+                    selectedSignal = Math.random() > 0.5 ? "UP" : "DOWN";
+                }
+            }
+            executeTrade(selectedSignal);
+        }
+
+        scanAnimationId = requestAnimationFrame(drawSmokeScanLine);
+    }
+
+    function finishScan() {
+        if (analysisTimer) clearInterval(analysisTimer);
+        scanCanvas.style.display = 'none';
+        if (scanAnimationId) {
+            cancelAnimationFrame(scanAnimationId);
+            scanAnimationId = null;
+        }
+        botContainer.classList.remove('glowing');
+        isScanning = false;
+    }
+
+    function executeTrade(direction) {
+        let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
+        let targetBtn = null;
+
+        if (direction === "UP") {
+            targetBtn = allElements.find(el => {
+                let text = (el.innerText || el.textContent || "").trim();
+                let cls = (el.className || "").toString().toLowerCase();
+                return text.includes("Up") || text.includes("Call") || text.includes("Higher") || text.includes("Buy") || text.includes("কল") || cls.includes("green") || cls.includes("call");
+            });
+        } else {
+            targetBtn = allElements.find(el => {
+                let text = (el.innerText || el.textContent || "").trim();
+                let cls = (el.className || "").toString().toLowerCase();
+                return text.includes("Down") || text.includes("Put") || text.includes("Lower") || text.includes("Sell") || text.includes("পুট") || cls.includes("red") || cls.includes("put");
+            });
+        }
+
+        if (targetBtn) {
+            targetBtn.click();
+        }
+    }
+
+    document.getElementById('qx_login_btn').onclick = function () {
+        let inputPass = document.getElementById('qx_pass').value;
+        if (inputPass === licenseKey) {
+            loginBox.remove();
+            botContainer.style.display = 'flex';
+        }
+    };
+
+    document.getElementById('qx_save_btn').onclick = function () {
+        let scanInput = parseFloat(document.getElementById('qx_scan_delay').value);
+        let afterInput = parseFloat(document.getElementById('qx_after_delay').value);
+        if (!isNaN(scanInput) && scanInput >= 2) scanDurationSec = scanInput;
+        if (!isNaN(afterInput) && afterInput >= 0) afterTradeScanSec = afterInput;
+
+        settingsBox.style.display = 'none';
+        isConfigured = true;
+    };
+
+    window.addEventListener('click', function(e) {
+        if (settingsBox.style.display === 'block' && !settingsBox.contains(e.target) && !botContainer.contains(e.target)) {
+            settingsBox.style.display = 'none';
+        }
+    });
+
+    let tapCount = 0, tapTimer = null;
+    botContainer.addEventListener('click', function (e) {
+        if (hasMoved || isDragging) return;
+
+        tapCount++;
+        if (tapTimer) clearTimeout(tapTimer);
+
+        tapTimer = setTimeout(() => {
+            if (tapCount >= 3) {
+                settingsBox.style.display = 'block';
+            } else {
+                if (!isConfigured) {
+                    settingsBox.style.display = 'block';
+                    return;
+                }
+                if (isScanning) return;
+
+                isScanning = true;
+                tradeExecuted = false;
+                botContainer.classList.add('glowing');
+                scanCanvas.style.display = 'block';
+                scanY = 0;
+                scanStartTime = Date.now();
+                
+                startRealTimeAnalysis();
+                drawSmokeScanLine();
+            }
+            tapCount = 0;
+        }, 350);
+    });
 })();
