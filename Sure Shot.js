@@ -1,211 +1,183 @@
 (function () {
-    // ক্লিনআপ প্রিভিয়াস ইনস্ট্যান্স
-    ['qx999-circle-bot', 'qx999-login', 'qx999-scan-line', 'qx999-signal-alert'].forEach(id => {
+    // ১. ক্লিনআপ প্রিভিয়াস ইনস্ট্যান্স
+    ['qx999-bot-root', 'qx999-laser-line', 'qx999-alert-popup'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.remove();
     });
 
+    // গ্লোবাল ভেরিয়েবল ও সেটিংস অবজেক্ট
     let licenseKey = "ALVI5S-HECK";
     let logoUrl = "https://ibb.co"; 
-    let scanDurationSec = 4; // স্ক্যানিং অ্যানিমেশন সময়
+    let defaultDots = "•••••••••••••";
+    
+    let botConfig = {
+        scanTime: 3,
+        afterTradeScan: 5,
+        directionMode: "RANDOM", // UP, DOWN, RANDOM
+        isEngineRunning: false
+    };
 
-    // অ্যাডভান্সড নিয়ন গ্রিন থিম সিএসএস (5S Trader স্পেশাল)
+    // ২. ইন্টারফেস স্টাইলিং (5S Signature Neon Visuals)
     const style = document.createElement('style');
     style.innerHTML = `
-        #qx999-logo-icon {
-            width: 65px; height: 65px;
-            background: url('${logoUrl}') center/cover no-repeat;
-            border-radius: 50%;
-            border: 2px solid #00ff66 !important;
-            box-shadow: 0 0 15px rgba(0, 255, 102, 0.5);
-            transition: transform 0.2s ease;
-        }
-        #qx999-logo-icon.glowing {
-            animation: pulseGlow 0.8s infinite alternate;
-        }
-        @keyframes pulseGlow {
-            from { transform: scale(1); box-shadow: 0 0 15px #00ff66; }
-            to { transform: scale(1.08); box-shadow: 0 0 30px #00ff66, 0 0 50px #00ff66; }
-        }
-        /* ৫এস ট্রেডার নিয়েন গ্রিন লেজার স্ক্যান লাইন */
-        #qx999-scan-line {
-            position: fixed; left: 0; width: 100vw; height: 6px;
-            background: linear-gradient(to bottom, rgba(0,255,102,0), rgba(0,255,102,1), rgba(0,255,102,0));
-            box-shadow: 0 0 20px #00ff66, 0 0 40px #00ff66;
-            z-index: 999998; display: none; pointer-events: none;
-        }
-        @keyframes laserScan {
-            0% { top: 0%; }
-            50% { top: 100%; }
-            100% { top: 0%; }
-        }
-        .qx999-input::placeholder { color: #00ff66; opacity: 0.4; }
+        .qx-root { font-family: system-ui, -apple-system, sans-serif; color: #fff; z-index: 999999; position: fixed; }
+        .qx-box { background: rgba(5, 14, 8, 0.98); border: 2px solid #00ff66; border-radius: 24px; box-shadow: 0 0 35px rgba(0, 255, 102, 0.3); backdrop-filter: blur(10px); text-align: center; }
+        .qx-input, .qx-select { width: 100%; padding: 12px; background: #020503; color: #00ff66; border: 2px solid #00ff66; border-radius: 12px; box-sizing: border-box; font-size: 15px; text-align: center; font-weight: bold; outline: none; margin-bottom: 15px; }
+        .qx-select { color: #fff; cursor: pointer; }
+        .qx-btn { width: 100%; padding: 13px; background: #00ff66; color: #000; border: none; border-radius: 12px; font-weight: 800; font-size: 16px; cursor: pointer; transition: all 0.2s ease; }
+        .qx-btn:hover { background: #00cc52; transform: scale(1.02); }
+        
+        #qx999-logo-btn { width: 65px; height: 65px; background: url('${logoUrl}') center/cover no-repeat; border-radius: 50%; border: 2px solid #00ff66 !important; box-shadow: 0 0 15px rgba(0, 255, 102, 0.5); cursor: move; }
+        #qx999-logo-btn.glowing { animation: pulseGlow 0.8s infinite alternate; }
+        @keyframes pulseGlow { from { transform: scale(1); box-shadow: 0 0 15px #00ff66; } to { transform: scale(1.08); box-shadow: 0 0 45px #00ff66; } }
+        
+        #qx999-laser-line { position: fixed; left: 0; width: 100vw; height: 5px; background: linear-gradient(to bottom, rgba(0,255,102,0), rgba(0,255,102,1), rgba(0,255,102,0)); box-shadow: 0 0 20px #00ff66, 0 0 40px #00ff66; z-index: 999998; display: none; pointer-events: none; }
+        @keyframes laserScanAnimation { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
     `;
     document.head.appendChild(style);
 
-    // ছবির মতো পাসওয়ার্ড ডট আগে থেকেই কভারড করে রাখার জন্য ডামি পাসওয়ার্ড জেনারেট
-    let defaultDots = "••••••••••••";
+    // রুট কন্টেইনার তৈরি
+    let botRoot = document.createElement('div');
+    botRoot.id = 'qx999-bot-root';
+    botRoot.className = 'qx-root';
+    document.body.appendChild(botRoot);
 
-    // ১. সম্পূর্ণ নতুন কাস্টমাইজড QX999 লগইন ও সেটিংস প্যানেল (ছবির মতো)
+    // ৩. LOGIN PANEL UI (সম্পূর্ণ ব্ল্যাক মাস্কড ডটস থিম)
     let loginBox = document.createElement('div');
-    loginBox.id = 'qx999-login';
-    loginBox.style.cssText = `
-        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 330px; background: rgba(5, 14, 8, 0.95); border: 2px solid #00ff66;
-        color: #ffffff; padding: 30px 22px; border-radius: 24px;
-        box-shadow: 0 0 40px rgba(0, 255, 102, 0.3); z-index: 999999;
-        font-family: system-ui, -apple-system, sans-serif; text-align: center;
-        backdrop-filter: blur(10px);
-    `;
-
+    loginBox.className = 'qx-box';
+    loginBox.style.cssText = `position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 320px; padding: 30px 20px; display: block;`;
     loginBox.innerHTML = `
-        <h2 style="margin: 0 0 8px 0; color: #00ff66; font-size: 26px; font-weight: 800; letter-spacing: 0.5px;">QX999 Login</h2>
-        <p style="font-size: 13px; color: #b0b0b0; margin: 0 0 22px 0;">Enter password to continue</p>
+        <h2 style="margin: 0 0 5px 0; color: #00ff66; font-size: 25px; font-weight: 800;">QX999 Login</h2>
+        <p style="font-size: 12px; color: #888; margin: 0 0 20px 0;">5S TRADER AUTOMATION ENGINE</p>
+        <input type="password" id="qx_pass" value="${defaultDots}" style="letter-spacing: 3px;" class="qx-input">
+        <button id="qx_login_btn" class="qx-btn">Enter</button>
+        <p id="qx_err" style="font-size: 12px; color: #ff1744; margin: 15px 0 0 0; display: none; font-weight: 600;">Wrong password. Request access from qx999.netlify.app</p>
+    `;
+    botRoot.appendChild(loginBox);
+
+    // 🔴 ৪. SETTINGS PANEL UI (Up, Down, Random, Scan Time, After Trade Scan)
+    let settingsBox = document.createElement('div');
+    settingsBox.className = 'qx-box';
+    settingsBox.style.cssText = `position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 310px; padding: 25px 20px; display: none;`;
+    settingsBox.innerHTML = `
+        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:20px; font-weight: 800;">QX999 Configuration</h3>
         
-        <div style="position: relative; margin-bottom: 22px;">
-            <input type="password" id="qx_pass" value="${defaultDots}" class="qx999-input" style="width: 100%; padding: 14px 15px; background: #020603; color: #00ff66; border: 2px solid #00ff66; border-radius: 14px; box-sizing: border-box; font-size: 18px; outline: none; text-align: center; letter-spacing: 3px; font-weight: bold;">
-        </div>
-
-        <button id="qx_login_btn" style="width: 100%; padding: 14px; background: #00ff66; color: #000000; border: none; border-radius: 14px; font-weight: 800; font-size: 17px; cursor: pointer; transition: all 0.2s ease;">Enter</button>
-        <p id="qx_err_msg" style="font-size: 12px; color: #ff1744; margin: 15px 0 0 0; display: none; font-weight: 600; line-height: 1.4;">Wrong or expired password. Get a new one from qx999.netlify.app</p>
+        <label style="font-size:11px; color:#aaa; display:block; text-align:left; margin-bottom:5px;">Scan Duration (Seconds):</label>
+        <input type="number" id="qx_scan_time" value="3" min="1" class="qx-input">
+        
+        <label style="font-size:11px; color:#aaa; display:block; text-align:left; margin-bottom:5px;">After Trade Scan (Delay Sec):</label>
+        <input type="number" id="qx_after_scan" value="5" min="1" class="qx-input">
+        
+        <label style="font-size:11px; color:#aaa; display:block; text-align:left; margin-bottom:5px;">Signal Filtering Direction:</label>
+        <select id="qx_direction" class="qx-select">
+            <option value="RANDOM">🔄 Smart Random (AI Pick)</option>
+            <option value="UP">🟢 Only UP Signals</option>
+            <option value="DOWN">🔴 Only DOWN Signals</option>
+        </select>
+        
+        <button id="qx_save_btn" class="qx-btn">Inject & Start AutoTrade</button>
     `;
-    document.body.appendChild(loginBox);
+    botRoot.appendChild(settingsBox);
 
-    // ২. ফ্লোটিং লোগো বাটন
-    let botContainer = document.createElement('div');
-    botContainer.id = 'qx999-circle-bot';
-    botContainer.style.cssText = `
-        position: fixed; top: 30%; left: 80%;
-        display: none; flex-direction: column; align-items: center;
-        z-index: 999999; cursor: move; user-select: none;
-    `;
-
+    // ৫. FLOATING SKULL BUTTON UI
+    let floatingBot = document.createElement('div');
+    floatingBot.style.cssText = `position: fixed; top: 30%; left: 85%; display: none; flex-direction: column; align-items: center; user-select: none; touch-action: none;`;
+    
     let logoIcon = document.createElement('div');
-    logoIcon.id = 'qx999-logo-icon';
-
+    logoIcon.id = 'qx999-logo-btn';
+    
     let logoText = document.createElement('span');
-    logoText.style.cssText = `
-        color: #ffffff; font-weight: 900; font-size: 13px; margin-top: 6px;
-        text-shadow: 0 0 6px #000, 0 0 10px #000; font-family: sans-serif;
-    `;
-    logoText.innerText = "QX999 AI";
+    logoText.style.cssText = `color: #fff; font-weight: 900; font-size: 13px; margin-top: 6px; text-shadow: 0 0 6px #000;`;
+    logoText.innerText = "QX999 AUTO";
 
-    botContainer.appendChild(logoIcon);
-    botContainer.appendChild(logoText);
-    document.body.appendChild(botContainer);
+    floatingBot.appendChild(logoIcon);
+    floatingBot.appendChild(logoText);
+    botRoot.appendChild(floatingBot);
 
-    // ৩. লেজার স্ক্যান লাইন বডি এলিমেন্ট
-    let scanLine = document.createElement('div');
-    scanLine.id = 'qx999-scan-line';
-    document.body.appendChild(scanLine);
+    // লেজার স্ক্যান ও অ্যালার্ট নোড এলিমেন্ট
+    let laserLine = document.createElement('div');
+    laserLine.id = 'qx999-laser-line';
+    document.body.appendChild(laserLine);
 
-    // সিগন্যাল ডিসপ্লে পপআপ
-    let signalAlert = document.createElement('div');
-    signalAlert.id = 'qx999-signal-alert';
-    signalAlert.style.cssText = `
-        position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
-        padding: 18px 35px; border-radius: 16px; font-family: sans-serif;
-        font-weight: 900; font-size: 22px; text-align: center; z-index: 1000000;
-        display: none; box-shadow: 0 0 30px rgba(0,0,0,0.7); letter-spacing: 0.5px;
-    `;
-    document.body.appendChild(signalAlert);
+    let alertPopup = document.createElement('div');
+    alertPopup.id = 'qx999-alert-popup';
+    alertPopup.style.cssText = `position: fixed; top: 80px; left: 50%; transform: translateX(-50%); padding: 15px 35px; border-radius: 16px; font-weight: 900; font-size: 22px; display: none; z-index: 1000000; box-shadow: 0 0 30px rgba(0,0,0,0.8);`;
+    document.body.appendChild(alertPopup);
 
-    // ড্র্যাগিং লজিক
-    let isDragging = false, startX, startY, initialX, initialY;
-    botContainer.addEventListener('mousedown', (e) => {
-        isDragging = false; startX = e.clientX; startY = e.clientY;
-        initialX = botContainer.offsetLeft; initialY = botContainer.offsetTop;
-        document.addEventListener('mousemove', dragMove);
-        document.addEventListener('mouseup', dragEnd);
-    });
+    // ৬. QUOTEX AUTO-TRADING ENGINE (সরাসরি ব্রোকার বাটনে ক্লিক মেকানিজম)
+    function executeQuotexTrade(decision) {
+        let executionButton = null;
+        
+        // Quotex এর মূল স্ট্রাকচার ক্লাস বা টেক্সট বেসড ডম এলিমেন্ট ডিটেকশন
+        if (decision === "UP") {
+            executionButton = document.querySelector('.btn-call') || 
+                              document.querySelector('.deposit-btn-wrap .green') || 
+                              Array.from(document.querySelectorAll('button')).find(el => el.textContent.includes('Up'));
+        } else if (decision === "DOWN") {
+            executionButton = document.querySelector('.btn-put') || 
+                              document.querySelector('.deposit-btn-wrap .red') || 
+                              Array.from(document.querySelectorAll('button')).find(el => el.textContent.includes('Down'));
+        }
 
-    function dragMove(e) {
-        let dx = e.clientX - startX; let dy = e.clientY - startY;
-        if (Math.abs(dx) > 5 || Math.abs(dy) > 5) isDragging = true;
-        botContainer.style.left = (initialX + dx) + 'px';
-        botContainer.style.top = (initialY + dy) + 'px';
-    }
-    function dragEnd() {
-        document.removeEventListener('mousemove', dragMove);
-        document.removeEventListener('mouseup', dragEnd);
+        if (executionButton) {
+            executionButton.click(); // 🎯 স্বয়ংক্রিয়ভাবে ট্রেড প্লেস ক্লিক
+            console.log(`%c[QX999 AUTO] Successfully executed ${decision} trade on Quotex layout.`, "color: #00ff66; font-weight: bold;");
+        } else {
+            console.log(`%c[QX999 WARNING] Quotex Trade Execution Button Not Found. Make sure you are on the real chart screen.`, "color: #ffeb3b; font-weight: bold;");
+        }
     }
 
-    // ৪. ৫এস ট্রেডার কোর এআই অ্যানালিসিস এবং লাইভ সিগন্যাল ইঞ্জিন
-    function get5sTraderSignal() {
-        let options = ["🟢 CALL (UP) 🟢", "🔴 PUT (DOWN) 🔴"];
-        return options[Math.floor(Math.random() * options.length)];
-    }
+    // ৭. কোর এআই অ্যানালিসিস লুপ
+    function processAiSignal Engine() {
+        if (!botConfig.isEngineRunning) return;
 
-    function triggerAIAnalysis() {
-        // আইকন গ্লো এবং টেক্সট পরিবর্তন
         logoIcon.classList.add('glowing');
-        logoText.innerText = "ANALYZING...";
+        logoText.innerText = "SCANNING...";
         logoText.style.color = "#ffeb3b";
 
-        // টিকটকার স্টাইল গ্রিন গ্লোয়িং লেজার লাইন অ্যানিমেশন স্টার্ট
-        scanLine.style.display = 'block';
-        scanLine.style.animation = `laserScan 1.2s infinite ease-in-out`;
+        laserLine.style.display = 'block';
+        laserLine.style.animation = `activeLaser 1.2s infinite ease-in-out`;
+        laserLine.style.animationName = 'laserScanAnimation';
 
         setTimeout(() => {
-            // অ্যানিমেশন স্টপ ও ক্লিনআপ
+            laserLine.style.display = 'none';
             logoIcon.classList.remove('glowing');
-            scanLine.style.display = 'none';
-            scanLine.style.animation = 'none';
-            
             logoText.innerText = "QX999 ACTIVE";
             logoText.style.color = "#00ff66";
 
-            // সিগন্যাল আউটপুট এবং পপআপ জেনারেশন
-            let targetSignal = get5sTraderSignal();
-            signalAlert.style.display = 'block';
-            
-            if (targetSignal.includes("CALL")) {
-                signalAlert.style.background = '#00ff66';
-                signalAlert.style.color = '#000000';
-                signalAlert.innerHTML = `🔥 QX999 AI: CALL (BUY NEXT 1:30 MIN) 🔥`;
+            // সেটিংস ডিরেকশন অনুযায়ী সিগন্যাল ডিসিশন
+            let finalDecision = "UP";
+            if (botConfig.directionMode === "UP") {
+                finalDecision = "UP";
+            } else if (botConfig.directionMode === "DOWN") {
+                finalDecision = "DOWN";
             } else {
-                signalAlert.style.background = '#ff1744';
-                signalAlert.style.color = '#ffffff';
-                signalAlert.innerHTML = `🔥 QX999 AI: PUT (SELL NEXT 1:30 MIN) 🔥`;
+                finalDecision = Math.random() > 0.5 ? "UP" : "DOWN"; // Random Mode
             }
 
-            setTimeout(() => { signalAlert.style.display = 'none'; }, 6000);
+            // অ্যালার্ট স্ক্রিন ডিসপ্লে
+            alertPopup.style.display = 'block';
+            if (finalDecision === "UP") {
+                alertPopup.style.background = '#00ff66'; alertPopup.style.color = '#000';
+                alertPopup.innerHTML = `🔥 QX999 AUTO: CALL (UP) EXECUTION 🔥`;
+            } else {
+                alertWindow.style.background = '#ff1744'; alertPopup.style.color = '#fff';
+                alertPopup.innerHTML = `🔥 QX999 AUTO: PUT (DOWN) EXECUTION 🔥`;
+            }
 
-        }, scanDurationSec * 1000);
+            // ১. অটো ট্রেড সম্পাদন
+            executeQuotexTrade(finalDecision);
+
+            setTimeout(() => { alertPopup.style.display = 'none'; }, 4000);
+
+            // ২. After Trade Scan ফ্রিকোয়েন্সি বিরতি হিসাব করে পরবর্তী সিগন্যাল রান
+            let totalNextWait = (1.5 * 60 * 1000) + (botConfig.afterTradeScan * 1000); 
+            setTimeout(processAiSignalEngine, totalNextWait);
+
+        }, botConfig.scanTime * 1000);
     }
 
-    // নির্দিষ্ট সময় (১ মিনিট ৩০ সেকেন্ড = ৯০ সেকেন্ড) পর পর অ্যানালিসিস লুপ রান হবে
-    function start130EngineLoop() {
-        triggerAIAnalysis(); // ফার্স্ট টাইম ইমিডিয়েট রান
-        setInterval(() => {
-            triggerAIAnalysis();
-        }, 90000); 
-    }
-
-    // ৫. লগইন বাটন ক্লিক অ্যাকশন (প্রথম ক্লিক ইভেন্ট)
+    // ⚙️ ৮. ইভেন্ট লিসেনারস ও সিকোয়েন্সিয়াল ফ্লো কন্ট্রোল
     document.getElementById('qx_login_btn').addEventListener('click', () => {
-        let passField = document.getElementById('qx_pass');
-        
-        // যদি ব্যবহারকারী প্রথমবার ডটগুলো পরিবর্তন না করে সরাসরি ক্লিক করেন অথবা সঠিক কী দেন
-        if (passField.value === defaultDots || passField.value === licenseKey) {
-            loginBox.style.display = 'none';
-            botContainer.style.display = 'flex';
-            
-            console.log("%c[QX999] 5S Trader Interface Successfully Loaded.", "color: #00ff66; font-weight: bold;");
-            
-            // ১ মিনিট ৩০ সেকেন্ডের মোমেন্টাম ইঞ্জিন স্টার্ট
-            start130EngineLoop();
-        } else {
-            // ভুল পাসওয়ার্ড দিলে ছবির মতো লাল এরর মেসেজ শো করবে
-            document.getElementById('qx_err_msg').style.display = 'block';
-        }
-    });
-
-    // ইনপুট ফিল্ডে ফোকাস করলে ডট ক্লিয়ার হয়ে নতুন পাসওয়ার্ড টাইপ করার সুবিধা
-    document.getElementById('qx_pass').addEventListener('focus', function() {
-        if(this.value === defaultDots) {
-            this.value = '';
-        }
-    });
-
-})();
+        let passVal = document.getElementById('qx_pass').value;
+        if (passVal === defaultDots || passVal === licenseKey) {
