@@ -26,9 +26,9 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.6);
             background-image: url('${logoUrl}');
-            background-position: 62% 20%; /* Skull shifted slightly to the left */
+            background-position: 62% 24%; /* Skull shifted slightly left and slightly down as requested */
             background-size: 85%;
             background-repeat: no-repeat;
             border-radius: 50%;
@@ -37,20 +37,15 @@
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
-        /* Exact video-like glowing and pulsing effect emerging from behind the skull */
+        /* Soft smoke-like glowing aura spreading from behind the skull */
         #qx999-circle-bot.glowing #qx999-logo-icon {
-            box-shadow: 0 0 25px 8px rgba(0, 255, 102, 0.9), 0 0 55px 20px rgba(0, 255, 102, 0.5), inset 0 0 15px rgba(0, 255, 102, 0.8) !important;
-            animation: qxPulse 0.7s infinite alternate ease-in-out;
-        }
-        @keyframes qxPulse {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.08); }
+            box-shadow: 0 0 30px 12px rgba(0, 255, 102, 0.75), 0 0 60px 25px rgba(0, 255, 102, 0.35), inset 0 0 15px rgba(0, 255, 102, 0.6) !important;
         }
         #qx999-circle-bot span {
             color: #ffffff !important; font-weight: bold; font-size: 13px;
             margin-top: 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.9); 
             font-family: Arial, sans-serif; pointer-events: none;
-            letter-spacing: 2px; /* Perfect balanced spacing: not too wide, not attached */
+            letter-spacing: 2px;
         }
         ::placeholder { color: #777777; }
         
@@ -76,16 +71,16 @@
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 330px; background: #0c150e; border: 1.5px solid #00ff66;
-        color: #ffffff; padding: 35px 24px 30px 24px; border-radius: 24px;
-        box-shadow: 0 0 25px rgba(0, 255, 102, 0.25); z-index: 999999;
-        font-family: sans-serif; text-align: center; display: ${isLoggedIn ? 'none' : 'block'};
+        width: 330px; background: #0b140d; border: 2px solid #00ff66;
+        color: #ffffff; padding: 35px 25px 30px 25px; border-radius: 20px;
+        box-shadow: 0 0 30px rgba(0, 255, 102, 0.3); z-index: 999999;
+        font-family: Arial, sans-serif; text-align: center; display: ${isLoggedIn ? 'none' : 'block'};
     `;
     loginBox.innerHTML = `
-        <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px; font-weight:500;">QX999 Pro Login</h3>
-        <p style="font-size:14px; color:#cccccc; margin:0 0 25px 0;">Enter secure access key</p>
-        <input type="password" id="qx_pass" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px;">
-        <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:600; font-size:17px; cursor:pointer; box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);">Authenticate</button>
+        <h2 style="margin:0 0 8px 0; color:#ffffff; font-size:26px; font-weight:bold;">QX999 Login</h2>
+        <p style="font-size:14px; color:#b0b0b0; margin:0 0 25px 0;">Enter password to continue</p>
+        <input type="password" id="qx_pass" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#1b281f; color:#fff; border:1.5px solid #284232; border-radius:12px; box-sizing:border-box; margin-bottom:22px; font-size:18px; outline:none; text-align:center; letter-spacing:4px;">
+        <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:17px; cursor:pointer; box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);">Enter</button>
     `;
     document.body.appendChild(loginBox);
 
@@ -134,7 +129,7 @@
     let logoIcon = document.createElement('div');
     logoIcon.id = 'qx999-logo-icon';
     let logoText = document.createElement('span');
-    logoText.innerText = "QX999";
+    logoText.innerText = "QX 9 9 9";
 
     botContainer.appendChild(logoIcon);
     botContainer.appendChild(logoText);
@@ -219,9 +214,9 @@
                 let cls = (el.getAttribute('class') || '').toLowerCase();
                 
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || cls.includes('green') || cls.includes('up') || cls.includes('bull')) {
-                    greenPower += 20;
+                    greenPower += 25;
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || cls.includes('red') || cls.includes('down') || cls.includes('bear')) {
-                    redPower += 20;
+                    redPower += 25;
                 }
             });
 
@@ -232,14 +227,14 @@
             if (prices.length > 0) {
                 let currentVal = parseFloat(prices[prices.length - 1]);
                 priceHistory.push(currentVal);
-                if (priceHistory.length > 12) priceHistory.shift();
+                if (priceHistory.length > 15) priceHistory.shift();
 
                 if (priceHistory.length >= 4) {
                     let recentDiff = priceHistory[priceHistory.length - 1] - priceHistory[priceHistory.length - 4];
                     if (recentDiff > 0) {
-                        greenPower += 80; 
+                        greenPower += 90; 
                     } else if (recentDiff < 0) {
-                        redPower += 80;  
+                        redPower += 90;  
                     }
                 }
             }
@@ -284,14 +279,12 @@
         if (elapsedSec >= (scanDurationSec - 0.4) && !tradeExecuted) {
             tradeExecuted = true;
             
-            // Advanced Anti-Loss Decision Logic: prevents random Down trades and balances signals accurately
             let finalDirection = "UP";
             if (greenPower > redPower) {
                 finalDirection = "UP";
             } else if (redPower > greenPower) {
                 finalDirection = "DOWN";
             } else {
-                // If equal, rely on the exact price momentum direction instead of defaulting to DOWN
                 finalDirection = priceHistory.length >= 2 && priceHistory[priceHistory.length - 1] >= priceHistory[priceHistory.length - 2] ? "UP" : "DOWN";
             }
 
