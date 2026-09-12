@@ -26,19 +26,20 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: transparent;
+            background-color: rgba(0, 0, 0, 0.19);
             background-image: url('${logoUrl}');
             background-position: center;
-            background-size: 88%;
+            background-size: 85%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.19); /* Exactly 19% light black shadow */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.19);
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
+        /* Video-like wide diffuse glowing smoke effect around and below logo during scan */
         #qx999-circle-bot.glowing #qx999-logo-icon {
-            box-shadow: 0 15px 25px rgba(0, 255, 102, 0.4) !important;
+            box-shadow: 0 0 35px 10px rgba(0, 255, 102, 0.65), 0 15px 45px rgba(0, 255, 102, 0.45) !important;
             transform: none !important;
         }
         #qx999-circle-bot span {
@@ -197,7 +198,7 @@
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    let scanAnimationId = null, scanY = -100, isScanning = false, scanStartTime = 0;
+    let scanAnimationId = null, scanY = -150, isScanning = false, scanStartTime = 0;
     let priceHistory = [];
 
     function startAntiLossCandleReaction() {
@@ -250,27 +251,30 @@
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
 
-        let trailHeight = 100;
+        // Wider and smoother trailing smoke effect like the reference video
+        let trailHeight = 180; 
         let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
         grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
-        grad.addColorStop(0.5, 'rgba(0, 255, 102, 0.1)');
-        grad.addColorStop(1, 'rgba(0, 255, 102, 0.65)');
+        grad.addColorStop(0.4, 'rgba(0, 255, 102, 0.08)');
+        grad.addColorStop(0.8, 'rgba(0, 255, 102, 0.35)');
+        grad.addColorStop(1, 'rgba(0, 255, 102, 0.85)');
 
         ctx.fillStyle = grad;
         ctx.fillRect(0, scanY - trailHeight, scanCanvas.width, trailHeight);
 
+        // Glowing bright scan line
         ctx.beginPath();
         ctx.strokeStyle = '#00ff66';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 3.5;
         ctx.shadowColor = '#00ff66';
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 25;
         ctx.moveTo(0, scanY);
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
         scanY += 8;
-        if (scanY > scanCanvas.height + 50) {
-            scanY = -50;
+        if (scanY > scanCanvas.height + 100) {
+            scanY = -100;
         }
 
         if (elapsedSec >= (scanDurationSec - 0.4) && !tradeExecuted) {
@@ -363,7 +367,7 @@
         tradeExecuted = false;
         botContainer.classList.add('glowing');
         scanCanvas.style.display = 'block';
-        scanY = -100;
+        scanY = -150;
         scanStartTime = Date.now();
         
         startAntiLossCandleReaction();
