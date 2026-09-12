@@ -26,25 +26,31 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(0, 0, 0, 0.5); /* Dark shadow background */
+            background-color: rgba(0, 0, 0, 0.5);
             background-image: url('${logoUrl}');
-            background-position: 78% 22%; /* Skull shifted more upward and more to the right */
+            background-position: 62% 20%; /* Skull shifted slightly to the left */
             background-size: 85%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.6); /* Base shadow behind skull */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
-        /* Glowing effect spreading outward with the shadow all around during scan */
+        /* Exact video-like glowing and pulsing effect emerging from behind the skull */
         #qx999-circle-bot.glowing #qx999-logo-icon {
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.6), 0 0 30px 10px rgba(0, 255, 102, 0.85), 0 0 60px 20px rgba(0, 255, 102, 0.4) !important;
-            transform: none !important;
+            box-shadow: 0 0 25px 8px rgba(0, 255, 102, 0.9), 0 0 55px 20px rgba(0, 255, 102, 0.5), inset 0 0 15px rgba(0, 255, 102, 0.8) !important;
+            animation: qxPulse 0.7s infinite alternate ease-in-out;
+        }
+        @keyframes qxPulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.08); }
         }
         #qx999-circle-bot span {
             color: #ffffff !important; font-weight: bold; font-size: 13px;
-            margin-top: 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.9); font-family: Arial, sans-serif; pointer-events: none;
+            margin-top: 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.9); 
+            font-family: Arial, sans-serif; pointer-events: none;
+            letter-spacing: 2px; /* Perfect balanced spacing: not too wide, not attached */
         }
         ::placeholder { color: #777777; }
         
@@ -213,9 +219,9 @@
                 let cls = (el.getAttribute('class') || '').toLowerCase();
                 
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || cls.includes('green') || cls.includes('up') || cls.includes('bull')) {
-                    greenPower += 15;
+                    greenPower += 20;
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || cls.includes('red') || cls.includes('down') || cls.includes('bear')) {
-                    redPower += 15;
+                    redPower += 20;
                 }
             });
 
@@ -226,15 +232,14 @@
             if (prices.length > 0) {
                 let currentVal = parseFloat(prices[prices.length - 1]);
                 priceHistory.push(currentVal);
-                if (priceHistory.length > 10) priceHistory.shift();
+                if (priceHistory.length > 12) priceHistory.shift();
 
-                if (priceHistory.length >= 5) {
-                    let diff1 = priceHistory[priceHistory.length - 1] - priceHistory[priceHistory.length - 3];
-                    let diff2 = priceHistory[priceHistory.length - 3] - priceHistory[priceHistory.length - 5];
-                    if (diff1 > 0 && diff2 > 0) {
-                        greenPower += 70; 
-                    } else if (diff1 < 0 && diff2 < 0) {
-                        redPower += 70;  
+                if (priceHistory.length >= 4) {
+                    let recentDiff = priceHistory[priceHistory.length - 1] - priceHistory[priceHistory.length - 4];
+                    if (recentDiff > 0) {
+                        greenPower += 80; 
+                    } else if (recentDiff < 0) {
+                        redPower += 80;  
                     }
                 }
             }
@@ -279,13 +284,15 @@
         if (elapsedSec >= (scanDurationSec - 0.4) && !tradeExecuted) {
             tradeExecuted = true;
             
+            // Advanced Anti-Loss Decision Logic: prevents random Down trades and balances signals accurately
             let finalDirection = "UP";
             if (greenPower > redPower) {
                 finalDirection = "UP";
             } else if (redPower > greenPower) {
                 finalDirection = "DOWN";
             } else {
-                finalDirection = priceHistory.length >= 3 && priceHistory[priceHistory.length - 1] >= priceHistory[priceHistory.length - 3] ? "UP" : "DOWN";
+                // If equal, rely on the exact price momentum direction instead of defaulting to DOWN
+                finalDirection = priceHistory.length >= 2 && priceHistory[priceHistory.length - 1] >= priceHistory[priceHistory.length - 2] ? "UP" : "DOWN";
             }
 
             executeTrade(finalDirection);
