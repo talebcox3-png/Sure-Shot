@@ -26,20 +26,20 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(0, 0, 0, 0.4); /* Soft dark shadow background */
+            background-color: rgba(0, 0, 0, 0.5); /* Dark shadow background */
             background-image: url('${logoUrl}');
-            background-position: 65% center; /* Skull shifted to the right */
+            background-position: 65% 40%; /* Skull shifted slightly upward and right */
             background-size: 85%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); /* Normal balanced shadow */
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.6); /* Base shadow behind skull */
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
-        /* Glowing effect spreading outward around all four sides including the shadow area during scan */
+        /* Glowing effect spreading outward with the shadow all around during scan */
         #qx999-circle-bot.glowing #qx999-logo-icon {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 28px 10px rgba(0, 255, 102, 0.9), 0 0 55px 20px rgba(0, 255, 102, 0.45) !important;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.6), 0 0 30px 10px rgba(0, 255, 102, 0.85), 0 0 60px 20px rgba(0, 255, 102, 0.4) !important;
             transform: none !important;
         }
         #qx999-circle-bot span {
