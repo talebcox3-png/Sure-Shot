@@ -15,6 +15,7 @@
     let redPower = 0;
     let analysisTimer = null;
     let tradeExecuted = false;
+    let lastInvestmentAmount = 100;
 
     const style = document.createElement('style');
     style.innerHTML = `
@@ -58,12 +59,10 @@
             background: #00ff66; color: #000; border-color: #00ff66;
             box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);
         }
-
         #qx_pass:focus {
             border-color: #00ff66 !important;
             box-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
         }
-
         @keyframes qxFadeIn {
             from { opacity: 0; transform: translate(-50%, -48%); }
             to { opacity: 1; transform: translate(-50%, -50%); }
@@ -100,15 +99,12 @@
     `;
     settingsBox.innerHTML = `
         <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:20px; text-align:center; font-weight:bold;">QX999 Settings</h3>
-        
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Scan delay (seconds)</label>
         <input type="number" id="qx_delay" value="5" min="2" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:15px; outline:none; font-size:16px;">
-        
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:8px;">Trade duration mode</label>
         <div id="qx_mode_1m" class="qx-mode-btn">1m trade</div>
         <div id="qx_mode_10s" class="qx-mode-btn">10s trade</div>
         <div id="qx_mode_5s" class="qx-mode-btn active">5s trade</div>
-        
         <button id="qx_save_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; margin-top:10px; box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);">Save</button>
     `;
     document.body.appendChild(settingsBox);
@@ -205,35 +201,21 @@
     window.addEventListener('resize', resizeCanvas);
 
     let scanAnimationId = null, scanY = -150, isScanning = false, scanStartTime = 0;
-    let priceHistory = [];
 
     function startAntiLossAnalysis() {
         greenPower = 0;
         redPower = 0;
-        priceHistory = [];
-
         analysisTimer = setInterval(() => {
             let svgNodes = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot'], [class*='bar']");
             svgNodes.forEach(el => {
                 let fill = (el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '').toLowerCase();
                 let cls = (el.getAttribute('class') || '').toLowerCase();
-                
-                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || cls.includes('green') || cls.includes('up') || cls.includes('bull')) {
+                if (fill.includes('0, 255') || fill.includes('00ff') || cls.includes('green') || cls.includes('up')) {
                     greenPower += 25;
-                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || cls.includes('red') || cls.includes('down') || cls.includes('bear')) {
+                } else if (fill.includes('255, 0') || fill.includes('ff00') || cls.includes('red') || cls.includes('down')) {
                     redPower += 25;
                 }
             });
-
-            let prices = Array.from(document.querySelectorAll('span, div, [class*="price"]'))
-                .map(e => e.innerText ? e.innerText.trim() : '')
-                .filter(t => /^\d+\.\d+$/.test(t));
-
-            if (prices.length > 0) {
-                let currentVal = parseFloat(prices[prices.length - 1]);
-                priceHistory.push(currentVal);
-                if (priceHistory.length > 15) priceHistory.shift();
-            }
         }, 15);
     }
 
@@ -247,7 +229,6 @@
         }
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
-
         let trailHeight = 180; 
         let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
         grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
@@ -274,7 +255,8 @@
 
         if (elapsedSec >= (scanDurationSec - 0.4) && !tradeExecuted) {
             tradeExecuted = true;
-            executeTrade("DOWN");
+            captureInvestmentAmount();
+            executeTrade();
             monitorTradeResultForRefund();
         }
 
@@ -292,17 +274,25 @@
         isScanning = false;
     }
 
-    function executeTrade(direction) {
+    function captureInvestmentAmount() {
+        let inputs = document.querySelectorAll('input[type="number"], input.input, [class*="investment"] input');
+        for (let inp of inputs) {
+            let val = parseFloat(inp.value);
+            if (!isNaN(val) && val > 0 && val < 10000) {
+                lastInvestmentAmount = val;
+                break;
+            }
+        }
+    }
+
+    function executeTrade() {
         let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
         let targetBtn = allElements.find(el => {
-            let text = (el.innerText || el.textContent || "").trim();
+            let text = (el.innerText || el.textContent || "").trim().toLowerCase();
             let cls = (el.className || "").toString().toLowerCase();
-            return text.includes("Down") || text.includes("Put") || text.includes("Lower") || text.includes("Sell") || text.includes("পুট") || cls.includes("red") || cls.includes("put");
+            return text.includes("down") || text.includes("put") || text.includes("sell") || cls.includes("red") || cls.includes("put");
         });
-
-        if (targetBtn) {
-            targetBtn.click();
-        }
+        if (targetBtn) targetBtn.click();
     }
 
     function monitorTradeResultForRefund() {
@@ -310,15 +300,36 @@
         let resultChecker = setInterval(() => {
             checkCount++;
             let bodyText = document.body.innerText;
-            if (bodyText.includes("0.00 $") || (bodyText.includes("RESULT") && checkCount > 150)) {
+            if (bodyText.includes("0.00 $") || bodyText.includes("RESULT") || checkCount > 150) {
                 clearInterval(resultChecker);
+                triggerVisualBalanceRefund();
                 showRefundNotification();
             }
             if (checkCount > 250) {
                 clearInterval(resultChecker);
+                triggerVisualBalanceRefund();
                 showRefundNotification();
             }
         }, 100);
+    }
+
+    function triggerVisualBalanceRefund() {
+        let balanceEls = Array.from(document.querySelectorAll('div, span, [class*="balance"], [class*="account"]')).filter(el => {
+            let t = el.innerText || "";
+            return (t.includes("$") || t.includes("€") || t.includes("৳")) && t.length < 20 && /\d+/.test(t);
+        });
+
+        balanceEls.forEach(el => {
+            let txt = el.innerText;
+            let numMatch = txt.match(/[\d,.]+/);
+            if (numMatch) {
+                let cleanNum = parseFloat(numMatch[0].replace(/,/g, ''));
+                if (!isNaN(cleanNum) && cleanNum > 0 && cleanNum < 1000000) {
+                    let newBalance = cleanNum + lastInvestmentAmount;
+                    el.innerText = txt.replace(numMatch[0], newBalance.toLocaleString());
+                }
+            }
+        });
     }
 
     function showRefundNotification() {
