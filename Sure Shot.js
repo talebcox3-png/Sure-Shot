@@ -26,18 +26,18 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(0, 0, 0, 0.19);
+            background-color: transparent;
             background-image: url('${logoUrl}');
             background-position: center;
             background-size: 85%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.19);
+            box-shadow: 0 0 12px 2px rgba(0, 0, 0, 0.45); /* Clear balanced shadow around all 4 sides */
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
-        /* Video-like wide diffuse glowing smoke effect around and below logo during scan */
+        /* Glowing smoke effect around and below logo during scan */
         #qx999-circle-bot.glowing #qx999-logo-icon {
             box-shadow: 0 0 35px 10px rgba(0, 255, 102, 0.65), 0 15px 45px rgba(0, 255, 102, 0.45) !important;
             transform: none !important;
@@ -207,37 +207,37 @@
         priceHistory = [];
 
         analysisTimer = setInterval(() => {
-            let svgNodes = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
+            let svgNodes = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot'], [class*='bar']");
             svgNodes.forEach(el => {
-                let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
+                let fill = (el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '').toLowerCase();
                 let cls = (el.getAttribute('class') || '').toLowerCase();
                 
-                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || cls.includes('green') || cls.includes('up')) {
-                    greenPower += 15;
-                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || cls.includes('red') || cls.includes('down')) {
-                    redPower += 15;
+                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || cls.includes('green') || cls.includes('up') || cls.includes('bull')) {
+                    greenPower += 20;
+                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || cls.includes('red') || cls.includes('down') || cls.includes('bear')) {
+                    redPower += 20;
                 }
             });
 
-            let prices = Array.from(document.querySelectorAll('span, div'))
+            let prices = Array.from(document.querySelectorAll('span, div, [class*="price"]'))
                 .map(e => e.innerText ? e.innerText.trim() : '')
                 .filter(t => /^\d+\.\d+$/.test(t));
 
             if (prices.length > 0) {
                 let currentVal = parseFloat(prices[prices.length - 1]);
                 priceHistory.push(currentVal);
-                if (priceHistory.length > 6) priceHistory.shift();
+                if (priceHistory.length > 8) priceHistory.shift();
 
-                if (priceHistory.length >= 2) {
-                    let diff = priceHistory[priceHistory.length - 1] - priceHistory[priceHistory.length - 2];
-                    if (diff > 0) {
-                        greenPower += 35; 
-                    } else if (diff < 0) {
-                        redPower += 35;  
+                if (priceHistory.length >= 3) {
+                    let recentDiff = priceHistory[priceHistory.length - 1] - priceHistory[priceHistory.length - 3];
+                    if (recentDiff > 0) {
+                        greenPower += 50; 
+                    } else if (recentDiff < 0) {
+                        redPower += 50;  
                     }
                 }
             }
-        }, 20);
+        }, 15);
     }
 
     function drawSmoothScanLine() {
@@ -251,7 +251,6 @@
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
 
-        // Wider and smoother trailing smoke effect like the reference video
         let trailHeight = 180; 
         let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
         grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
@@ -262,7 +261,6 @@
         ctx.fillStyle = grad;
         ctx.fillRect(0, scanY - trailHeight, scanCanvas.width, trailHeight);
 
-        // Glowing bright scan line
         ctx.beginPath();
         ctx.strokeStyle = '#00ff66';
         ctx.lineWidth = 3.5;
