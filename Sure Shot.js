@@ -5,7 +5,7 @@
     });
 
     let licenseKey = "Alvi1234";
-    let logoUrl = "https://i.ibb.co.com/qMJ4Jgsz/imgupscaler-enhanced-1.jpg";
+    let logoUrl = "https://i.ibb.co.com/5hPpvrTB/Firefly-Remove-Background.png";
     let scanDurationSec = 3; 
     let isConfigured = false; 
 
@@ -25,10 +25,10 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(12, 21, 14, 0.70);
+            background-color: rgba(12, 21, 14, 0.75);
             background-image: url('${logoUrl}');
             background-position: 56% center; /* Slightly to the right as requested */
-            background-size: 86%; /* Skull slightly larger, shadow untouched */
+            background-size: 85%; /* Skull slightly larger, shadow untouched */
             background-repeat: no-repeat;
             border-radius: 50%;
             border: 2px solid transparent;
@@ -63,7 +63,7 @@
     loginBox.innerHTML = `
         <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px; font-weight:500;">QX999 Login</h3>
         <p style="font-size:14px; color:#cccccc; margin:0 0 25px 0;">Enter password to continue</p>
-        <input type="password" id="qx_pass" value="${licenseKey}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px; text-align:center;">
+        <input type="password" id="qx_pass" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px;">
         <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:600; font-size:17px; cursor:pointer;">Enter</button>
     `;
     document.body.appendChild(loginBox);
