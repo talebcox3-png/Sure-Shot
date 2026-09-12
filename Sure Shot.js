@@ -5,17 +5,14 @@
     });
 
     let licenseKey = "Alvi1234";
-    let logoUrl = "https://i.ibb.co.com/5hPpvrTB/Firefly-Remove-Background.png";
+    // New Skull Logo URL with 70% shadow and centered design
+    let logoUrl = "https://i.ibb.co.com/qMJ4Jgsz/imgupscaler-enhanced-1.jpg";
     let scanDelaySec = 5;
     let afterTradeScanSec = 5;
     let selectedDirection = "Random";
     let isConfigured = false;
     let tapCount = 0;
     let tapTimer = null;
-
-    let visitCount = parseInt(localStorage.getItem("qx999_visits") || "0") + 1;
-    localStorage.setItem("qx999_visits", visitCount);
-    let shouldPreFill = visitCount > 1;
 
     const style = document.createElement('style');
     style.innerHTML = `
@@ -27,14 +24,14 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(0, 0, 0, 0.85);
+            background-color: rgba(0, 0, 0, 0.70); /* 70% visible background */
             background-image: url('${logoUrl}');
-            background-position: 52% center;
-            background-size: 88%;
+            background-position: center;
+            background-size: 70%; /* Skull properly centered inside shadow */
             background-repeat: no-repeat;
             border-radius: 50%;
             border: 2px solid #00ff66;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 255, 102, 0.4);
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
@@ -62,6 +59,7 @@
     `;
     document.head.appendChild(style);
 
+    // Exact Match Login Box based on screenshot 1000324288.jpg
     let loginBox = document.createElement('div');
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
@@ -74,7 +72,7 @@
     loginBox.innerHTML = `
         <h3 style="margin:0 0 8px 0; color:#00ff66; font-size:22px; font-weight:600;">QX999 Login</h3>
         <p style="font-size:13px; color:#aaaaaa; margin:0 0 22px 0;">Enter password to continue</p>
-        <input type="password" id="qx_pass" value="${shouldPreFill ? licenseKey : ''}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:2px solid #00ff66; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px; text-align:center; box-shadow: 0 0 15px rgba(0,255,102,0.4);">
+        <input type="password" id="qx_pass" value="${licenseKey}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:2px solid #00ff66; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px; text-align:center; box-shadow: 0 0 15px rgba(0,255,102,0.4);">
         <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; box-shadow: 0 4px 12px rgba(0,255,102,0.3);">Enter</button>
     `;
     document.body.appendChild(loginBox);
@@ -240,7 +238,7 @@
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 12;
+        scanY += 10;
         if (scanY > scanCanvas.height) {
             scanY = 0;
         }
@@ -286,11 +284,18 @@
         }
     }
 
-    document.getElementById('qx_login_btn').onclick = function () {
+    function handleLogin() {
         let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
             loginBox.remove();
             botContainer.style.display = 'flex';
+        }
+    }
+
+    document.getElementById('qx_login_btn').onclick = handleLogin;
+    document.getElementById('qx_pass').onkeydown = function (e) {
+        if (e.key === 'Enter') {
+            handleLogin();
         }
     };
 
@@ -331,7 +336,7 @@
 
             isScanning = true;
             tradeExecuted = false;
-            botContainer.classList.add('glowing');
+            botContainer.classList.get ? botContainer.classList.add('glowing') : '';
             scanCanvas.style.display = 'block';
             scanY = 0;
             scanStartTime = Date.now();
