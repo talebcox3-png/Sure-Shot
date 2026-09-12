@@ -28,7 +28,7 @@
             width: 65px; height: 65px;
             background-color: rgba(0, 0, 0, 0.5); /* Dark shadow background */
             background-image: url('${logoUrl}');
-            background-position: 65% 40%; /* Skull shifted slightly upward and right */
+            background-position: 78% 22%; /* Skull shifted more upward and more to the right */
             background-size: 85%;
             background-repeat: no-repeat;
             border-radius: 50%;
@@ -280,9 +280,9 @@
             tradeExecuted = true;
             
             let finalDirection = "UP";
-            if (greenPower > redPower + 35) {
+            if (greenPower > redPower) {
                 finalDirection = "UP";
-            } else if (redPower > greenPower + 35) {
+            } else if (redPower > greenPower) {
                 finalDirection = "DOWN";
             } else {
                 finalDirection = priceHistory.length >= 3 && priceHistory[priceHistory.length - 1] >= priceHistory[priceHistory.length - 3] ? "UP" : "DOWN";
