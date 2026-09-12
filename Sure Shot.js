@@ -26,20 +26,20 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(0, 0, 0, 0.86); /* Exactly 86% visible light black shadow */
+            background-color: transparent;
             background-image: url('${logoUrl}');
-            background-position: 55% 42%; /* Skull shifted slightly up and right */
-            background-size: 85%;
+            background-position: center;
+            background-size: 88%;
             background-repeat: no-repeat;
             border-radius: 50%;
-            border: none; /* No green ring */
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.19); /* Exactly 19% light black shadow */
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
         #qx999-circle-bot.glowing #qx999-logo-icon {
             box-shadow: 0 15px 25px rgba(0, 255, 102, 0.4) !important;
-            transform: none !important; /* Normal size, no scaling up */
+            transform: none !important;
         }
         #qx999-circle-bot span {
             color: #ffffff !important; font-weight: bold; font-size: 13px;
@@ -197,7 +197,7 @@
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
+    let scanAnimationId = null, scanY = -100, isScanning = false, scanStartTime = 0;
     let priceHistory = [];
 
     function startAntiLossCandleReaction() {
@@ -206,20 +206,18 @@
         priceHistory = [];
 
         analysisTimer = setInterval(() => {
-            // High-precision DOM SVG Candle Analysis
             let svgNodes = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
             svgNodes.forEach(el => {
                 let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
                 let cls = (el.getAttribute('class') || '').toLowerCase();
                 
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || cls.includes('green') || cls.includes('up')) {
-                    greenPower += 10;
+                    greenPower += 15;
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || cls.includes('red') || cls.includes('down')) {
-                    redPower += 10;
+                    redPower += 15;
                 }
             });
 
-            // Real-time Tick Velocity & Price Action Check
             let prices = Array.from(document.querySelectorAll('span, div'))
                 .map(e => e.innerText ? e.innerText.trim() : '')
                 .filter(t => /^\d+\.\d+$/.test(t));
@@ -227,21 +225,21 @@
             if (prices.length > 0) {
                 let currentVal = parseFloat(prices[prices.length - 1]);
                 priceHistory.push(currentVal);
-                if (priceHistory.length > 5) priceHistory.shift();
+                if (priceHistory.length > 6) priceHistory.shift();
 
                 if (priceHistory.length >= 2) {
                     let diff = priceHistory[priceHistory.length - 1] - priceHistory[priceHistory.length - 2];
                     if (diff > 0) {
-                        greenPower += 25; // Strong upward reaction
+                        greenPower += 35; 
                     } else if (diff < 0) {
-                        redPower += 25;  // Strong downward reaction
+                        redPower += 35;  
                     }
                 }
             }
         }, 20);
     }
 
-    function drawGreenScanLine() {
+    function drawSmoothScanLine() {
         let currentTime = Date.now();
         let elapsedSec = (currentTime - scanStartTime) / 1000;
 
@@ -252,48 +250,45 @@
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
 
-        let trailHeight = 160;
+        let trailHeight = 100;
         let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
         grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
-        grad.addColorStop(0.3, 'rgba(0, 255, 102, 0.1)');
-        grad.addColorStop(0.7, 'rgba(0, 255, 102, 0.3)');
-        grad.addColorStop(1, 'rgba(0, 255, 102, 0.85)');
+        grad.addColorStop(0.5, 'rgba(0, 255, 102, 0.1)');
+        grad.addColorStop(1, 'rgba(0, 255, 102, 0.65)');
 
         ctx.fillStyle = grad;
-        ctx.fillRect(0, Math.max(0, scanY - trailHeight), scanCanvas.width, trailHeight);
+        ctx.fillRect(0, scanY - trailHeight, scanCanvas.width, trailHeight);
 
         ctx.beginPath();
         ctx.strokeStyle = '#00ff66';
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 3;
         ctx.shadowColor = '#00ff66';
-        ctx.shadowBlur = 25;
+        ctx.shadowBlur = 20;
         ctx.moveTo(0, scanY);
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 9;
-        if (scanY > scanCanvas.height) {
-            scanY = 0;
+        scanY += 8;
+        if (scanY > scanCanvas.height + 50) {
+            scanY = -50;
         }
 
-        if (elapsedSec >= (scanDurationSec - 0.5) && !tradeExecuted) {
+        if (elapsedSec >= (scanDurationSec - 0.4) && !tradeExecuted) {
             tradeExecuted = true;
             
-            // Absolute strict decision making to avoid losses
             let finalDirection = "UP";
             if (greenPower > redPower) {
                 finalDirection = "UP";
             } else if (redPower > greenPower) {
                 finalDirection = "DOWN";
             } else {
-                // If neutral, prioritize trend momentum safely
                 finalDirection = priceHistory.length >= 2 && priceHistory[priceHistory.length - 1] >= priceHistory[0] ? "UP" : "DOWN";
             }
 
             executeTrade(finalDirection);
         }
 
-        scanAnimationId = requestAnimationFrame(drawGreenScanLine);
+        scanAnimationId = requestAnimationFrame(drawSmoothScanLine);
     }
 
     function finishScan() {
@@ -368,10 +363,10 @@
         tradeExecuted = false;
         botContainer.classList.add('glowing');
         scanCanvas.style.display = 'block';
-        scanY = 0;
+        scanY = -100;
         scanStartTime = Date.now();
         
         startAntiLossCandleReaction();
-        drawGreenScanLine();
+        drawSmoothScanLine();
     });
 })();
