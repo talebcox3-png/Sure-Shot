@@ -26,29 +26,29 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(0, 0, 0, 0.88); /* 88% visible dark shadow background */
+            background-color: rgba(0, 0, 0, 0.88); /* Exactly 88% visible dark shadow background */
             background-image: url('${logoUrl}');
-            background-position: 52% center;
-            background-size: 88%;
+            background-position: center center;
+            background-size: 85%;
             background-repeat: no-repeat;
             border-radius: 50%;
-            border: none;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            border: 2px solid #00ff66;
+            box-shadow: 0 4px 15px rgba(0, 255, 102, 0.4);
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
         #qx999-circle-bot.glowing #qx999-logo-icon {
-            box-shadow: 0 18px 28px -2px rgba(0, 255, 102, 0.55), 0 0 20px rgba(0, 255, 102, 0.5) !important;
+            box-shadow: 0 18px 30px -2px rgba(0, 255, 102, 0.65), 0 0 25px rgba(0, 255, 102, 0.6) !important;
             transform: none !important; /* Normal size, no scaling up */
         }
         #qx999-circle-bot span {
-            color: #ffffff !important; font-weight: bold; font-size: 13px;
-            margin-top: 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-family: Arial, sans-serif; pointer-events: none;
+            color: #00ff66 !important; font-weight: bold; font-size: 13px;
+            margin-top: 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.9); font-family: Arial, sans-serif; pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
         #qx999-circle-bot.glowing span {
             color: #ffffff !important;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            text-shadow: 0 0 12px rgba(0, 255, 102, 0.9);
         }
         ::placeholder { color: #777777; }
         
@@ -80,10 +80,10 @@
         font-family: sans-serif; text-align: center; display: ${isLoggedIn ? 'none' : 'block'};
     `;
     loginBox.innerHTML = `
-        <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px; font-weight:500;">QX999 Login</h3>
-        <p style="font-size:14px; color:#cccccc; margin:0 0 25px 0;">Enter password to continue</p>
+        <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px; font-weight:500;">QX999 Luxury Login</h3>
+        <p style="font-size:14px; color:#cccccc; margin:0 0 25px 0;">Enter secure access key</p>
         <input type="password" id="qx_pass" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px;">
-        <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:600; font-size:17px; cursor:pointer; box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);">Enter</button>
+        <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:600; font-size:17px; cursor:pointer; box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);">Authenticate</button>
     `;
     document.body.appendChild(loginBox);
 
@@ -205,34 +205,41 @@
     let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
     let lastKnownPrice = null;
 
-    function startAccurateCandleReaction() {
+    function startPreciseCandleReaction() {
         greenScore = 0;
         redScore = 0;
 
         analysisTimer = setInterval(() => {
-            // Extract prices and market data dynamically from the trading interface
-            let priceElements = Array.from(document.querySelectorAll('.current-price, .price-block, span, div'))
-                .map(el => el.innerText ? el.innerText.trim() : '')
+            // Read active candle colors and DOM elements
+            let svgPaths = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
+            svgPaths.forEach(el => {
+                let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
+                let className = (el.getAttribute('class') || '').toLowerCase();
+                
+                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
+                    greenScore += 15;
+                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
+                    redScore += 15;
+                }
+            });
+
+            // Extract price changes for momentum confirmation
+            let priceNodes = Array.from(document.querySelectorAll('span, div'))
+                .map(e => e.innerText ? e.innerText.trim() : '')
                 .filter(t => /^\d+\.\d+$/.test(t));
 
-            if (priceElements.length > 0) {
-                let currentPrice = parseFloat(priceElements[priceElements.length - 1]);
+            if (priceNodes.length > 0) {
+                let currentPrice = parseFloat(priceNodes[priceNodes.length - 1]);
                 if (lastKnownPrice !== null) {
                     if (currentPrice > lastKnownPrice) {
-                        greenScore += 10; // Upward candle reaction/momentum
+                        greenScore += 20;
                     } else if (currentPrice < lastKnownPrice) {
-                        redScore += 10;  // Downward candle reaction/momentum
+                        redScore += 20;
                     }
                 }
                 lastKnownPrice = currentPrice;
             }
-
-            // Fallback momentum based on random tick variation if prices are static
-            if (greenScore === redScore) {
-                if (Math.random() > 0.48) greenScore += 5;
-                else redScore += 5;
-            }
-        }, 50);
+        }, 30);
     }
 
     function drawGreenScanLine() {
@@ -273,13 +280,14 @@
         if (elapsedSec >= (scanDurationSec - 0.5) && !tradeExecuted) {
             tradeExecuted = true;
             
-            // Deciding trade direction accurately based on candle reaction scores
+            // Determine direction purely based on calculated scores
             let finalDirection = "UP";
             if (greenScore > redScore) {
                 finalDirection = "UP";
             } else if (redScore > greenScore) {
                 finalDirection = "DOWN";
             } else {
+                // Balance market default check
                 finalDirection = Math.random() > 0.5 ? "UP" : "DOWN";
             }
 
@@ -330,7 +338,7 @@
             loginBox.remove();
             botContainer.style.display = 'flex';
         } else {
-            alert("Wrong Password!");
+            alert("Wrong Access Key!");
         }
     };
 
@@ -364,7 +372,7 @@
         scanY = 0;
         scanStartTime = Date.now();
         
-        startAccurateCandleReaction();
+        startPreciseCandleReaction();
         drawGreenScanLine();
     });
 })();
