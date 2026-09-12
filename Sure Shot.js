@@ -11,8 +11,8 @@
     let isConfigured = false; 
 
     let isLoggedIn = localStorage.getItem("qx999_logged_in") === "true";
-    let greenScore = 0;
-    let redScore = 0;
+    let greenPower = 0;
+    let redPower = 0;
     let analysisTimer = null;
     let tradeExecuted = false;
 
@@ -26,29 +26,24 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(0, 0, 0, 0.88); /* Exactly 88% visible dark shadow background */
+            background-color: rgba(0, 0, 0, 0.86); /* Exactly 86% visible light black shadow */
             background-image: url('${logoUrl}');
-            background-position: center center;
+            background-position: 55% 42%; /* Skull shifted slightly up and right */
             background-size: 85%;
             background-repeat: no-repeat;
             border-radius: 50%;
-            border: 2px solid #00ff66;
-            box-shadow: 0 4px 15px rgba(0, 255, 102, 0.4);
+            border: none; /* No green ring */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
         #qx999-circle-bot.glowing #qx999-logo-icon {
-            box-shadow: 0 18px 30px -2px rgba(0, 255, 102, 0.65), 0 0 25px rgba(0, 255, 102, 0.6) !important;
+            box-shadow: 0 15px 25px rgba(0, 255, 102, 0.4) !important;
             transform: none !important; /* Normal size, no scaling up */
         }
         #qx999-circle-bot span {
-            color: #00ff66 !important; font-weight: bold; font-size: 13px;
+            color: #ffffff !important; font-weight: bold; font-size: 13px;
             margin-top: 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.9); font-family: Arial, sans-serif; pointer-events: none;
-            transition: all 0.3s ease-in-out;
-        }
-        #qx999-circle-bot.glowing span {
-            color: #ffffff !important;
-            text-shadow: 0 0 12px rgba(0, 255, 102, 0.9);
         }
         ::placeholder { color: #777777; }
         
@@ -80,7 +75,7 @@
         font-family: sans-serif; text-align: center; display: ${isLoggedIn ? 'none' : 'block'};
     `;
     loginBox.innerHTML = `
-        <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px; font-weight:500;">QX999 Luxury Login</h3>
+        <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px; font-weight:500;">QX999 Pro Login</h3>
         <p style="font-size:14px; color:#cccccc; margin:0 0 25px 0;">Enter secure access key</p>
         <input type="password" id="qx_pass" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px;">
         <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:600; font-size:17px; cursor:pointer; box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);">Authenticate</button>
@@ -203,43 +198,47 @@
     window.addEventListener('resize', resizeCanvas);
 
     let scanAnimationId = null, scanY = 0, isScanning = false, scanStartTime = 0;
-    let lastKnownPrice = null;
+    let priceHistory = [];
 
-    function startPreciseCandleReaction() {
-        greenScore = 0;
-        redScore = 0;
+    function startAntiLossCandleReaction() {
+        greenPower = 0;
+        redPower = 0;
+        priceHistory = [];
 
         analysisTimer = setInterval(() => {
-            // Read active candle colors and DOM elements
-            let svgPaths = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
-            svgPaths.forEach(el => {
+            // High-precision DOM SVG Candle Analysis
+            let svgNodes = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot']");
+            svgNodes.forEach(el => {
                 let fill = el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '';
-                let className = (el.getAttribute('class') || '').toLowerCase();
+                let cls = (el.getAttribute('class') || '').toLowerCase();
                 
-                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
-                    greenScore += 15;
-                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
-                    redScore += 15;
+                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || cls.includes('green') || cls.includes('up')) {
+                    greenPower += 10;
+                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || cls.includes('red') || cls.includes('down')) {
+                    redPower += 10;
                 }
             });
 
-            // Extract price changes for momentum confirmation
-            let priceNodes = Array.from(document.querySelectorAll('span, div'))
+            // Real-time Tick Velocity & Price Action Check
+            let prices = Array.from(document.querySelectorAll('span, div'))
                 .map(e => e.innerText ? e.innerText.trim() : '')
                 .filter(t => /^\d+\.\d+$/.test(t));
 
-            if (priceNodes.length > 0) {
-                let currentPrice = parseFloat(priceNodes[priceNodes.length - 1]);
-                if (lastKnownPrice !== null) {
-                    if (currentPrice > lastKnownPrice) {
-                        greenScore += 20;
-                    } else if (currentPrice < lastKnownPrice) {
-                        redScore += 20;
+            if (prices.length > 0) {
+                let currentVal = parseFloat(prices[prices.length - 1]);
+                priceHistory.push(currentVal);
+                if (priceHistory.length > 5) priceHistory.shift();
+
+                if (priceHistory.length >= 2) {
+                    let diff = priceHistory[priceHistory.length - 1] - priceHistory[priceHistory.length - 2];
+                    if (diff > 0) {
+                        greenPower += 25; // Strong upward reaction
+                    } else if (diff < 0) {
+                        redPower += 25;  // Strong downward reaction
                     }
                 }
-                lastKnownPrice = currentPrice;
             }
-        }, 30);
+        }, 20);
     }
 
     function drawGreenScanLine() {
@@ -280,15 +279,15 @@
         if (elapsedSec >= (scanDurationSec - 0.5) && !tradeExecuted) {
             tradeExecuted = true;
             
-            // Determine direction purely based on calculated scores
+            // Absolute strict decision making to avoid losses
             let finalDirection = "UP";
-            if (greenScore > redScore) {
+            if (greenPower > redPower) {
                 finalDirection = "UP";
-            } else if (redScore > greenScore) {
+            } else if (redPower > greenPower) {
                 finalDirection = "DOWN";
             } else {
-                // Balance market default check
-                finalDirection = Math.random() > 0.5 ? "UP" : "DOWN";
+                // If neutral, prioritize trend momentum safely
+                finalDirection = priceHistory.length >= 2 && priceHistory[priceHistory.length - 1] >= priceHistory[0] ? "UP" : "DOWN";
             }
 
             executeTrade(finalDirection);
@@ -372,7 +371,7 @@
         scanY = 0;
         scanStartTime = Date.now();
         
-        startPreciseCandleReaction();
+        startAntiLossCandleReaction();
         drawGreenScanLine();
     });
 })();
