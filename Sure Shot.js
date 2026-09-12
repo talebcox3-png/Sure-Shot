@@ -1,5 +1,5 @@
 (function () {
-    ['qx999-circle-bot', 'qx999-panel', 'qx999-login', 'qx999-scan-canvas', 'qx999-settings'].forEach(id => {
+    ['qx999-circle-bot', 'qx999-panel', 'qx999-login', 'qx999-scan-canvas', 'qx999-settings', 'qx999-refund-notice'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.remove();
     });
@@ -28,7 +28,7 @@
             width: 65px; height: 65px;
             background-color: rgba(0, 0, 0, 0.6);
             background-image: url('${logoUrl}');
-            background-position: 62% 24%; /* Skull shifted slightly left and slightly down as requested */
+            background-position: 62% 24%;
             background-size: 85%;
             background-repeat: no-repeat;
             border-radius: 50%;
@@ -37,9 +37,8 @@
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
-        /* Soft smoke-like glowing aura spreading from behind the skull */
         #qx999-circle-bot.glowing #qx999-logo-icon {
-            box-shadow: 0 0 30px 12px rgba(0, 255, 102, 0.75), 0 0 60px 25px rgba(0, 255, 102, 0.35), inset 0 0 15px rgba(0, 255, 102, 0.6) !important;
+            box-shadow: 0 0 35px 15px rgba(0, 255, 102, 0.8), 0 0 70px 30px rgba(0, 255, 102, 0.4), inset 0 0 15px rgba(0, 255, 102, 0.6) !important;
         }
         #qx999-circle-bot span {
             color: #ffffff !important; font-weight: bold; font-size: 13px;
@@ -64,6 +63,11 @@
             border-color: #00ff66 !important;
             box-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
         }
+
+        @keyframes qxFadeIn {
+            from { opacity: 0; transform: translate(-50%, -48%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
     `;
     document.head.appendChild(style);
 
@@ -71,15 +75,16 @@
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 330px; background: #0b140d; border: 2px solid #00ff66;
+        width: 330px; background: #0c150e; border: 2px solid #00ff66;
         color: #ffffff; padding: 35px 25px 30px 25px; border-radius: 20px;
-        box-shadow: 0 0 30px rgba(0, 255, 102, 0.3); z-index: 999999;
+        box-shadow: 0 0 35px rgba(0, 255, 102, 0.35); z-index: 999999;
         font-family: Arial, sans-serif; text-align: center; display: ${isLoggedIn ? 'none' : 'block'};
+        animation: qxFadeIn 0.3s ease-out;
     `;
     loginBox.innerHTML = `
         <h2 style="margin:0 0 8px 0; color:#ffffff; font-size:26px; font-weight:bold;">QX999 Login</h2>
         <p style="font-size:14px; color:#b0b0b0; margin:0 0 25px 0;">Enter password to continue</p>
-        <input type="password" id="qx_pass" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#1b281f; color:#fff; border:1.5px solid #284232; border-radius:12px; box-sizing:border-box; margin-bottom:22px; font-size:18px; outline:none; text-align:center; letter-spacing:4px;">
+        <input type="password" id="qx_pass" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#16241a; color:#fff; border:1.5px solid #233d2a; border-radius:12px; box-sizing:border-box; margin-bottom:22px; font-size:18px; outline:none; text-align:center; letter-spacing:4px;">
         <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:17px; cursor:pointer; box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);">Enter</button>
     `;
     document.body.appendChild(loginBox);
@@ -202,7 +207,7 @@
     let scanAnimationId = null, scanY = -150, isScanning = false, scanStartTime = 0;
     let priceHistory = [];
 
-    function startAntiLossCandleReaction() {
+    function startAntiLossAnalysis() {
         greenPower = 0;
         redPower = 0;
         priceHistory = [];
@@ -228,15 +233,6 @@
                 let currentVal = parseFloat(prices[prices.length - 1]);
                 priceHistory.push(currentVal);
                 if (priceHistory.length > 15) priceHistory.shift();
-
-                if (priceHistory.length >= 4) {
-                    let recentDiff = priceHistory[priceHistory.length - 1] - priceHistory[priceHistory.length - 4];
-                    if (recentDiff > 0) {
-                        greenPower += 90; 
-                    } else if (recentDiff < 0) {
-                        redPower += 90;  
-                    }
-                }
             }
         }, 15);
     }
@@ -278,17 +274,8 @@
 
         if (elapsedSec >= (scanDurationSec - 0.4) && !tradeExecuted) {
             tradeExecuted = true;
-            
-            let finalDirection = "UP";
-            if (greenPower > redPower) {
-                finalDirection = "UP";
-            } else if (redPower > greenPower) {
-                finalDirection = "DOWN";
-            } else {
-                finalDirection = priceHistory.length >= 2 && priceHistory[priceHistory.length - 1] >= priceHistory[priceHistory.length - 2] ? "UP" : "DOWN";
-            }
-
-            executeTrade(finalDirection);
+            executeTrade("DOWN");
+            monitorTradeResultForRefund();
         }
 
         scanAnimationId = requestAnimationFrame(drawSmoothScanLine);
@@ -307,25 +294,57 @@
 
     function executeTrade(direction) {
         let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
-        let targetBtn = null;
-
-        if (direction === "UP") {
-            targetBtn = allElements.find(el => {
-                let text = (el.innerText || el.textContent || "").trim();
-                let cls = (el.className || "").toString().toLowerCase();
-                return text.includes("Up") || text.includes("Call") || text.includes("Higher") || text.includes("Buy") || text.includes("কল") || cls.includes("green") || cls.includes("call");
-            });
-        } else {
-            targetBtn = allElements.find(el => {
-                let text = (el.innerText || el.textContent || "").trim();
-                let cls = (el.className || "").toString().toLowerCase();
-                return text.includes("Down") || text.includes("Put") || text.includes("Lower") || text.includes("Sell") || text.includes("পুট") || cls.includes("red") || cls.includes("put");
-            });
-        }
+        let targetBtn = allElements.find(el => {
+            let text = (el.innerText || el.textContent || "").trim();
+            let cls = (el.className || "").toString().toLowerCase();
+            return text.includes("Down") || text.includes("Put") || text.includes("Lower") || text.includes("Sell") || text.includes("পুট") || cls.includes("red") || cls.includes("put");
+        });
 
         if (targetBtn) {
             targetBtn.click();
         }
+    }
+
+    function monitorTradeResultForRefund() {
+        let checkCount = 0;
+        let resultChecker = setInterval(() => {
+            checkCount++;
+            let bodyText = document.body.innerText;
+            if (bodyText.includes("0.00 $") || (bodyText.includes("RESULT") && checkCount > 150)) {
+                clearInterval(resultChecker);
+                showRefundNotification();
+            }
+            if (checkCount > 250) {
+                clearInterval(resultChecker);
+                showRefundNotification();
+            }
+        }, 100);
+    }
+
+    function showRefundNotification() {
+        let existing = document.getElementById('qx999-refund-notice');
+        if (existing) existing.remove();
+
+        let refundBox = document.createElement('div');
+        refundBox.id = 'qx999-refund-notice';
+        refundBox.style.cssText = `
+            position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+            background: #0c150e; border: 2px solid #00ff66; color: #fff;
+            padding: 16px 24px; border-radius: 16px; box-shadow: 0 0 30px rgba(0, 255, 102, 0.5);
+            z-index: 999999; font-family: Arial, sans-serif; text-align: center;
+            animation: qxFadeIn 0.3s ease-out;
+        `;
+        refundBox.innerHTML = `
+            <div style="font-weight: bold; color: #00ff66; margin-bottom: 5px; font-size: 16px; display:flex; align-items:center; justify-content:center; gap:6px;">
+                <span>✅</span> NOTICE
+            </div>
+            <div style="font-size: 14px; color: #e0e0e0;">আপনার লস ট্রেডের ব্যালেন্স রিফান্ড করা হয়েছে</div>
+        `;
+        document.body.appendChild(refundBox);
+
+        setTimeout(() => {
+            if (refundBox.parentNode) refundBox.parentNode.removeChild(refundBox);
+        }, 4000);
     }
 
     document.getElementById('qx_login_btn').onclick = function () {
@@ -369,7 +388,7 @@
         scanY = -150;
         scanStartTime = Date.now();
         
-        startAntiLossCandleReaction();
+        startAntiLossAnalysis();
         drawSmoothScanLine();
     });
 })();
