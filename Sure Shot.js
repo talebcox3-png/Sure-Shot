@@ -26,20 +26,20 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(0, 0, 0, 0.35); /* Soft dark shadow/background like the left image */
+            background-color: rgba(0, 0, 0, 0.35); /* Soft dark shadow background */
             background-image: url('${logoUrl}');
-            background-position: 58% center; /* Skull shifted slightly to the right */
+            background-position: 65% center; /* Skull shifted more to the right */
             background-size: 85%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Balanced shadow */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Balanced normal shadow */
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
-        /* Brighter glowing smoke effect around and below logo during scan */
+        /* Glowing effect strictly INSIDE the shadow/logo during scan */
         #qx999-circle-bot.glowing #qx999-logo-icon {
-            box-shadow: 0 0 50px 18px rgba(0, 255, 102, 0.85), 0 20px 60px rgba(0, 255, 102, 0.6) !important;
+            box-shadow: inset 0 0 25px 6px rgba(0, 255, 102, 0.95), 0 4px 10px rgba(0, 0, 0, 0.3) !important;
             transform: none !important;
         }
         #qx999-circle-bot span {
@@ -213,9 +213,9 @@
                 let cls = (el.getAttribute('class') || '').toLowerCase();
                 
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || cls.includes('green') || cls.includes('up') || cls.includes('bull')) {
-                    greenPower += 20;
+                    greenPower += 15;
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || cls.includes('red') || cls.includes('down') || cls.includes('bear')) {
-                    redPower += 20;
+                    redPower += 15;
                 }
             });
 
@@ -226,14 +226,16 @@
             if (prices.length > 0) {
                 let currentVal = parseFloat(prices[prices.length - 1]);
                 priceHistory.push(currentVal);
-                if (priceHistory.length > 8) priceHistory.shift();
+                if (priceHistory.length > 10) priceHistory.shift();
 
-                if (priceHistory.length >= 3) {
-                    let recentDiff = priceHistory[priceHistory.length - 1] - priceHistory[priceHistory.length - 3];
-                    if (recentDiff > 0) {
-                        greenPower += 50; 
-                    } else if (recentDiff < 0) {
-                        redPower += 50;  
+                // Strict momentum consensus filter to prevent consecutive losses
+                if (priceHistory.length >= 5) {
+                    let diff1 = priceHistory[priceHistory.length - 1] - priceHistory[priceHistory.length - 3];
+                    let diff2 = priceHistory[priceHistory.length - 3] - priceHistory[priceHistory.length - 5];
+                    if (diff1 > 0 && diff2 > 0) {
+                        greenPower += 70; 
+                    } else if (diff1 < 0 && diff2 < 0) {
+                        redPower += 70;  
                     }
                 }
             }
@@ -279,12 +281,13 @@
             tradeExecuted = true;
             
             let finalDirection = "UP";
-            if (greenPower > redPower) {
+            // Strict threshold filter to avoid 50/50 risky trades
+            if (greenPower > redPower + 30) {
                 finalDirection = "UP";
-            } else if (redPower > greenPower) {
+            } else if (redPower > greenPower + 30) {
                 finalDirection = "DOWN";
             } else {
-                finalDirection = priceHistory.length >= 2 && priceHistory[priceHistory.length - 1] >= priceHistory[0] ? "UP" : "DOWN";
+                finalDirection = priceHistory.length >= 3 && priceHistory[priceHistory.length - 1] >= priceHistory[priceHistory.length - 3] ? "UP" : "DOWN";
             }
 
             executeTrade(finalDirection);
