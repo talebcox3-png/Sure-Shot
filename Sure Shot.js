@@ -5,7 +5,7 @@
     });
 
     let licenseKey = "Alvi1234";
-    let logoUrl = "https://i.ibb.co.com/5hPpvrTB/Firefly-Remove-Background.png";
+    let logoUrl = "https://i.ibb.co.com/qMJ4Jgsz/imgupscaler-enhanced-1.jpg";
     let scanDurationSec = 3; 
     let isConfigured = false; 
 
@@ -25,19 +25,20 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(12, 21, 14, 0.75);
+            background-color: rgba(12, 21, 14, 0.70);
             background-image: url('${logoUrl}');
-            background-position: center center;
-            background-size: 82%;
+            background-position: 56% center; /* Slightly to the right as requested */
+            background-size: 86%; /* Skull slightly larger, shadow untouched */
             background-repeat: no-repeat;
             border-radius: 50%;
-            border: none;
+            border: 2px solid transparent;
             box-shadow: 0 8px 22px rgba(0, 0, 0, 0.75), inset 0 0 10px rgba(0, 0, 0, 0.5);
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
         #qx999-logo-icon.glowing {
-            box-shadow: 0 0 30px #00ff66, 0 0 15px #00ff66, inset 0 0 15px #00ff66 !important;
+            border-color: #00ff66;
+            box-shadow: 0 0 35px #00ff66, 0 0 20px #00ff66, inset 0 0 15px #00ff66 !important;
             transform: scale(1.08);
         }
         #qx999-circle-bot span {
@@ -62,7 +63,7 @@
     loginBox.innerHTML = `
         <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px; font-weight:500;">QX999 Login</h3>
         <p style="font-size:14px; color:#cccccc; margin:0 0 25px 0;">Enter password to continue</p>
-        <input type="password" id="qx_pass" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px;">
+        <input type="password" id="qx_pass" value="${licenseKey}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px; text-align:center;">
         <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:600; font-size:17px; cursor:pointer;">Enter</button>
     `;
     document.body.appendChild(loginBox);
@@ -174,9 +175,9 @@
                 let className = (el.getAttribute('class') || '').toLowerCase();
 
                 if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || className.includes('green') || className.includes('up')) {
-                    greenForce += 15;
+                    greenForce += 20;
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || className.includes('red') || className.includes('down')) {
-                    redForce += 15;
+                    redForce += 20;
                 }
             });
 
@@ -188,12 +189,12 @@
                 let current = parseFloat(priceNodes[priceNodes.length - 1]);
                 let prev = parseFloat(priceNodes[priceNodes.length - 2]);
                 if (current > prev) {
-                    greenForce += 25;
+                    greenForce += 35;
                 } else if (current < prev) {
-                    redForce += 25;
+                    redForce += 35;
                 }
             }
-        }, 50);
+        }, 40);
     }
 
     function drawSmokeScanLine() {
@@ -207,12 +208,12 @@
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
 
-        let trailHeight = 140;
+        let trailHeight = 160;
         let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
         grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
-        grad.addColorStop(0.3, 'rgba(0, 255, 102, 0.08)');
-        grad.addColorStop(0.7, 'rgba(0, 255, 102, 0.25)');
-        grad.addColorStop(1, 'rgba(0, 255, 102, 0.6)');
+        grad.addColorStop(0.3, 'rgba(0, 255, 102, 0.1)');
+        grad.addColorStop(0.7, 'rgba(0, 255, 102, 0.3)');
+        grad.addColorStop(1, 'rgba(0, 255, 102, 0.75)');
 
         ctx.fillStyle = grad;
         ctx.fillRect(0, Math.max(0, scanY - trailHeight), scanCanvas.width, trailHeight);
@@ -221,17 +222,17 @@
         ctx.strokeStyle = '#00ff66';
         ctx.lineWidth = 4;
         ctx.shadowColor = '#00ff66';
-        ctx.shadowBlur = 30;
+        ctx.shadowBlur = 35;
         ctx.moveTo(0, scanY);
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 5.2;
+        scanY += 6;
         if (scanY > scanCanvas.height) {
             scanY = 0;
         }
 
-        if (elapsedSec >= (scanDurationSec - 1) && !tradeExecuted) {
+        if (elapsedSec >= (scanDurationSec - 0.8) && !tradeExecuted) {
             tradeExecuted = true;
             if (greenForce >= redForce) {
                 selectedSignal = "UP";
@@ -278,12 +279,19 @@
         }
     }
 
-    document.getElementById('qx_login_btn').onclick = function () {
+    function handleLogin() {
         let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
             localStorage.setItem("qx999_logged_in", "true");
             loginBox.remove();
             botContainer.style.display = 'flex';
+        }
+    }
+
+    document.getElementById('qx_login_btn').onclick = handleLogin;
+    document.getElementById('qx_pass').onkeydown = function (e) {
+        if (e.key === 'Enter') {
+            handleLogin();
         }
     };
 
