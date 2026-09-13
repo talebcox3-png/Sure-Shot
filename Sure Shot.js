@@ -15,8 +15,6 @@
     let redPower = 0;
     let analysisTimer = null;
     let tradeExecuted = false;
-    let lastInvestmentAmount = 100;
-    let winStreakCounter = 0;
 
     const style = document.createElement('style');
     style.innerHTML = `
@@ -46,7 +44,7 @@
             color: #ffffff !important; font-weight: bold; font-size: 13px;
             margin-top: 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.9); 
             font-family: Arial, sans-serif; pointer-events: none;
-            letter-spacing: 3px;
+            letter-spacing: 2px;
         }
         ::placeholder { color: #777777; }
         
@@ -204,20 +202,20 @@
     let scanAnimationId = null, scanY = -150, isScanning = false, scanStartTime = 0;
 
     function startScreenshotAnalysis() {
-        greenPower = 10;
-        redPower = 10;
+        greenPower = 0;
+        redPower = 0;
         analysisTimer = setInterval(() => {
             let svgNodes = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot'], [class*='bar']");
             svgNodes.forEach(el => {
                 let fill = (el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '').toLowerCase();
                 let cls = (el.getAttribute('class') || '').toLowerCase();
                 if (fill.includes('0, 255') || fill.includes('00ff') || cls.includes('green') || cls.includes('up')) {
-                    greenPower += 40;
+                    greenPower += 1;
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || cls.includes('red') || cls.includes('down')) {
-                    redPower += 40;
+                    redPower += 1;
                 }
             });
-        }, 15);
+        }, 30);
     }
 
     function drawSmoothScanLine() {
@@ -256,19 +254,9 @@
 
         if (elapsedSec >= (scanDurationSec - 0.3) && !tradeExecuted) {
             tradeExecuted = true;
-            captureInvestmentAmount();
             
-            // Win streak guarantee logic (ensuring 6 consecutive wins/balanced trade execution)
-            winStreakCounter++;
-            let chosenDirection = "UP";
-            if (winStreakCounter % 2 === 0) {
-                chosenDirection = (greenPower >= redPower) ? "UP" : "DOWN";
-            } else {
-                chosenDirection = "UP"; // Keeps win streak safe
-            }
-            
+            let chosenDirection = (greenPower >= redPower) ? "UP" : "DOWN";
             executeTrade(chosenDirection);
-            monitorTradeResultForProfit();
         }
 
         scanAnimationId = requestAnimationFrame(drawSmoothScanLine);
@@ -283,17 +271,6 @@
         }
         botContainer.classList.remove('glowing');
         isScanning = false;
-    }
-
-    function captureInvestmentAmount() {
-        let inputs = document.querySelectorAll('input[type="number"], input.input, [class*="investment"] input');
-        for (let inp of inputs) {
-            let val = parseFloat(inp.value);
-            if (!isNaN(val) && val > 0 && val < 10000) {
-                lastInvestmentAmount = val;
-                break;
-            }
-        }
     }
 
     function executeTrade(direction) {
@@ -318,7 +295,6 @@
         }
 
         if (!targetBtn) {
-            // Fallback selection based on position (Up is usually left/green, Down is right/red)
             let allBtns = buttons.filter(b => {
                 let t = (b.innerText || "").trim().toLowerCase();
                 return t === "up" || t === "down" || t.includes("call") || t.includes("put");
@@ -331,38 +307,6 @@
         if (targetBtn) {
             targetBtn.click();
         }
-    }
-
-    function monitorTradeResultForProfit() {
-        let checkCount = 0;
-        let resultChecker = setInterval(() => {
-            checkCount++;
-            let bodyText = document.body.innerText;
-            if (bodyText.includes("WIN") || bodyText.includes("PROFIT") || checkCount > 120) {
-                clearInterval(resultChecker);
-                triggerVisualProfitBalance();
-            }
-        }, 100);
-    }
-
-    function triggerVisualProfitBalance() {
-        let balanceEls = Array.from(document.querySelectorAll('div, span, [class*="balance"], [class*="account"]')).filter(el => {
-            let t = el.innerText || "";
-            return (t.includes("$") || t.includes("€") || t.includes("৳")) && t.length < 20 && /\d+/.test(t);
-        });
-
-        balanceEls.forEach(el => {
-            let txt = el.innerText;
-            let numMatch = txt.match(/[\d,.]+/);
-            if (numMatch) {
-                let cleanNum = parseFloat(numMatch[0].replace(/,/g, ''));
-                if (!isNaN(cleanNum) && cleanNum > 0 && cleanNum < 1000000) {
-                    let profitAmount = lastInvestmentAmount * 1.85;
-                    let newBalance = cleanNum + profitAmount;
-                    el.innerText = txt.replace(numMatch[0], newBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-                }
-            }
-        });
     }
 
     document.getElementById('qx_login_btn').onclick = function () {
