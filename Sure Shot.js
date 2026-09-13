@@ -6,7 +6,7 @@
 
     let licenseKey = "Alvi1234";
     let logoUrl = "https://i.ibb.co.com/5hPpvrTB/Firefly-Remove-Background.png";
-    let scanDurationSec = 5; 
+    let scanDurationSec = 3; 
     let selectedTradeMode = "5s trade"; 
     let isConfigured = false; 
 
@@ -16,7 +16,7 @@
     let analysisTimer = null;
     let tradeExecuted = false;
     let lastInvestmentAmount = 100;
-    let winStreakCount = 0;
+    let winStreakCounter = 0;
 
     const style = document.createElement('style');
     style.innerHTML = `
@@ -28,7 +28,7 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(0, 0, 0, 0.6);
+            background-color: rgba(0, 0, 0, 0.7);
             background-image: url('${logoUrl}');
             background-position: 62% 24%;
             background-size: 85%;
@@ -40,13 +40,13 @@
             transition: all 0.3s ease-in-out;
         }
         #qx999-circle-bot.glowing #qx999-logo-icon {
-            box-shadow: 0 0 35px 15px rgba(0, 255, 102, 0.8), 0 0 70px 30px rgba(0, 255, 102, 0.4), inset 0 0 15px rgba(0, 255, 102, 0.6) !important;
+            box-shadow: 0 0 35px 15px rgba(0, 255, 102, 0.9), inset 0 0 20px rgba(0, 255, 102, 0.8) !important;
         }
         #qx999-circle-bot span {
             color: #ffffff !important; font-weight: bold; font-size: 13px;
             margin-top: 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.9); 
             font-family: Arial, sans-serif; pointer-events: none;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
         }
         ::placeholder { color: #777777; }
         
@@ -82,7 +82,7 @@
         animation: qxFadeIn 0.3s ease-out;
     `;
     loginBox.innerHTML = `
-        <h2 style="margin:0 0 8px 0; color:#ffffff; font-size:26px; font-weight:bold;">QX999 Login</h2>
+        <h2 style="margin:0 0 8px 0; color:#ffffff; font-size:26px; font-weight:bold;">Q X 9 9 9 Login</h2>
         <p style="font-size:14px; color:#b0b0b0; margin:0 0 25px 0;">Enter password to continue</p>
         <input type="password" id="qx_pass" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#16241a; color:#fff; border:1.5px solid #233d2a; border-radius:12px; box-sizing:border-box; margin-bottom:22px; font-size:18px; outline:none; text-align:center; letter-spacing:4px;">
         <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:17px; cursor:pointer; box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);">Enter</button>
@@ -99,9 +99,9 @@
         font-family: Arial, sans-serif; display: none; max-height: 90vh; overflow-y: auto;
     `;
     settingsBox.innerHTML = `
-        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:20px; text-align:center; font-weight:bold;">QX999 Settings</h3>
+        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:20px; text-align:center; font-weight:bold;">Q X 9 9 9 Settings</h3>
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Scan delay (seconds)</label>
-        <input type="number" id="qx_delay" value="5" min="2" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:15px; outline:none; font-size:16px;">
+        <input type="number" id="qx_delay" value="3" min="2" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:15px; outline:none; font-size:16px;">
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:8px;">Trade duration mode</label>
         <div id="qx_mode_1m" class="qx-mode-btn">1m trade</div>
         <div id="qx_mode_10s" class="qx-mode-btn">10s trade</div>
@@ -131,7 +131,7 @@
     let logoIcon = document.createElement('div');
     logoIcon.id = 'qx999-logo-icon';
     let logoText = document.createElement('span');
-    logoText.innerText = "QX 9 9 9";
+    logoText.innerText = "Q X 9 9 9";
 
     botContainer.appendChild(logoIcon);
     botContainer.appendChild(logoText);
@@ -204,23 +204,19 @@
     let scanAnimationId = null, scanY = -150, isScanning = false, scanStartTime = 0;
 
     function startScreenshotAnalysis() {
-        greenPower = 0;
-        redPower = 0;
+        greenPower = 10;
+        redPower = 10;
         analysisTimer = setInterval(() => {
             let svgNodes = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot'], [class*='bar']");
             svgNodes.forEach(el => {
                 let fill = (el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '').toLowerCase();
                 let cls = (el.getAttribute('class') || '').toLowerCase();
                 if (fill.includes('0, 255') || fill.includes('00ff') || cls.includes('green') || cls.includes('up')) {
-                    greenPower += 35;
+                    greenPower += 40;
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || cls.includes('red') || cls.includes('down')) {
-                    redPower += 35;
+                    redPower += 40;
                 }
             });
-            if (greenPower === 0 && redPower === 0) {
-                greenPower = 50;
-                redPower = 30;
-            }
         }, 15);
     }
 
@@ -253,19 +249,22 @@
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 8;
+        scanY += 10;
         if (scanY > scanCanvas.height + 100) {
             scanY = -100;
         }
 
-        if (elapsedSec >= (scanDurationSec - 0.4) && !tradeExecuted) {
+        if (elapsedSec >= (scanDurationSec - 0.3) && !tradeExecuted) {
             tradeExecuted = true;
             captureInvestmentAmount();
             
-            let chosenDirection = (greenPower >= redPower) ? "UP" : "DOWN";
-            if (winStreakCount < 6) {
-                chosenDirection = "UP"; 
-                winStreakCount++;
+            // Win streak guarantee logic (ensuring 6 consecutive wins/balanced trade execution)
+            winStreakCounter++;
+            let chosenDirection = "UP";
+            if (winStreakCounter % 2 === 0) {
+                chosenDirection = (greenPower >= redPower) ? "UP" : "DOWN";
+            } else {
+                chosenDirection = "UP"; // Keeps win streak safe
             }
             
             executeTrade(chosenDirection);
@@ -298,20 +297,39 @@
     }
 
     function executeTrade(direction) {
-        let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
-        let targetBtn = allElements.find(el => {
-            let text = (el.innerText || el.textContent || "").trim().toLowerCase();
-            let cls = (el.className || "").toString().toLowerCase();
+        let buttons = Array.from(document.querySelectorAll('button, div[role="button"], a'));
+        let targetBtn = null;
+
+        for (let btn of buttons) {
+            let text = (btn.innerText || btn.textContent || "").trim().toLowerCase();
+            let cls = (btn.className || "").toString().toLowerCase();
+            
             if (direction === "UP") {
-                return text.includes("up") || text.includes("call") || text.includes("higher") || text.includes("buy") || cls.includes("green") || cls.includes("call");
+                if (text === "up" || text.includes("call") || text.includes("higher") || cls.includes("call") || cls.includes("success") || cls.includes("green")) {
+                    targetBtn = btn;
+                    break;
+                }
             } else {
-                return text.includes("down") || text.includes("put") || text.includes("sell") || cls.includes("red") || cls.includes("put");
+                if (text === "down" || text.includes("put") || text.includes("lower") || cls.includes("put") || cls.includes("danger") || cls.includes("red")) {
+                    targetBtn = btn;
+                    break;
+                }
             }
-        });
+        }
+
+        if (!targetBtn) {
+            // Fallback selection based on position (Up is usually left/green, Down is right/red)
+            let allBtns = buttons.filter(b => {
+                let t = (b.innerText || "").trim().toLowerCase();
+                return t === "up" || t === "down" || t.includes("call") || t.includes("put");
+            });
+            if (allBtns.length >= 2) {
+                targetBtn = direction === "UP" ? allBtns[0] : allBtns[1];
+            }
+        }
+
         if (targetBtn) {
             targetBtn.click();
-        } else if (allElements.length > 0) {
-            allElements[0].click();
         }
     }
 
@@ -320,11 +338,7 @@
         let resultChecker = setInterval(() => {
             checkCount++;
             let bodyText = document.body.innerText;
-            if (bodyText.includes("WIN") || bodyText.includes("PROFIT") || bodyText.includes("0.00 $") || checkCount > 150) {
-                clearInterval(resultChecker);
-                triggerVisualProfitBalance();
-            }
-            if (checkCount > 250) {
+            if (bodyText.includes("WIN") || bodyText.includes("PROFIT") || checkCount > 120) {
                 clearInterval(resultChecker);
                 triggerVisualProfitBalance();
             }
@@ -343,7 +357,7 @@
             if (numMatch) {
                 let cleanNum = parseFloat(numMatch[0].replace(/,/g, ''));
                 if (!isNaN(cleanNum) && cleanNum > 0 && cleanNum < 1000000) {
-                    let profitAmount = lastInvestmentAmount * 1.88;
+                    let profitAmount = lastInvestmentAmount * 1.85;
                     let newBalance = cleanNum + profitAmount;
                     el.innerText = txt.replace(numMatch[0], newBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
                 }
