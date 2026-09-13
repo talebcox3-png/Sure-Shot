@@ -1,5 +1,5 @@
 (function () {
-    ['qx999-circle-bot', 'qx999-panel', 'qx999-login', 'qx999-scan-canvas', 'qx999-settings', 'qx999-refund-notice'].forEach(id => {
+    ['qx999-circle-bot', 'qx999-panel', 'qx999-login', 'qx999-scan-canvas', 'qx999-settings'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.remove();
     });
@@ -16,6 +16,7 @@
     let analysisTimer = null;
     let tradeExecuted = false;
     let lastInvestmentAmount = 100;
+    let winStreakCount = 0;
 
     const style = document.createElement('style');
     style.innerHTML = `
@@ -202,7 +203,7 @@
 
     let scanAnimationId = null, scanY = -150, isScanning = false, scanStartTime = 0;
 
-    function startAntiLossAnalysis() {
+    function startScreenshotAnalysis() {
         greenPower = 0;
         redPower = 0;
         analysisTimer = setInterval(() => {
@@ -211,11 +212,15 @@
                 let fill = (el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '').toLowerCase();
                 let cls = (el.getAttribute('class') || '').toLowerCase();
                 if (fill.includes('0, 255') || fill.includes('00ff') || cls.includes('green') || cls.includes('up')) {
-                    greenPower += 25;
+                    greenPower += 35;
                 } else if (fill.includes('255, 0') || fill.includes('ff00') || cls.includes('red') || cls.includes('down')) {
-                    redPower += 25;
+                    redPower += 35;
                 }
             });
+            if (greenPower === 0 && redPower === 0) {
+                greenPower = 50;
+                redPower = 30;
+            }
         }, 15);
     }
 
@@ -256,8 +261,15 @@
         if (elapsedSec >= (scanDurationSec - 0.4) && !tradeExecuted) {
             tradeExecuted = true;
             captureInvestmentAmount();
-            executeTrade();
-            monitorTradeResultForRefund();
+            
+            let chosenDirection = (greenPower >= redPower) ? "UP" : "DOWN";
+            if (winStreakCount < 6) {
+                chosenDirection = "UP"; 
+                winStreakCount++;
+            }
+            
+            executeTrade(chosenDirection);
+            monitorTradeResultForProfit();
         }
 
         scanAnimationId = requestAnimationFrame(drawSmoothScanLine);
@@ -285,35 +297,41 @@
         }
     }
 
-    function executeTrade() {
+    function executeTrade(direction) {
         let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
         let targetBtn = allElements.find(el => {
             let text = (el.innerText || el.textContent || "").trim().toLowerCase();
             let cls = (el.className || "").toString().toLowerCase();
-            return text.includes("down") || text.includes("put") || text.includes("sell") || cls.includes("red") || cls.includes("put");
+            if (direction === "UP") {
+                return text.includes("up") || text.includes("call") || text.includes("higher") || text.includes("buy") || cls.includes("green") || cls.includes("call");
+            } else {
+                return text.includes("down") || text.includes("put") || text.includes("sell") || cls.includes("red") || cls.includes("put");
+            }
         });
-        if (targetBtn) targetBtn.click();
+        if (targetBtn) {
+            targetBtn.click();
+        } else if (allElements.length > 0) {
+            allElements[0].click();
+        }
     }
 
-    function monitorTradeResultForRefund() {
+    function monitorTradeResultForProfit() {
         let checkCount = 0;
         let resultChecker = setInterval(() => {
             checkCount++;
             let bodyText = document.body.innerText;
-            if (bodyText.includes("0.00 $") || bodyText.includes("RESULT") || checkCount > 150) {
+            if (bodyText.includes("WIN") || bodyText.includes("PROFIT") || bodyText.includes("0.00 $") || checkCount > 150) {
                 clearInterval(resultChecker);
-                triggerVisualBalanceRefund();
-                showRefundNotification();
+                triggerVisualProfitBalance();
             }
             if (checkCount > 250) {
                 clearInterval(resultChecker);
-                triggerVisualBalanceRefund();
-                showRefundNotification();
+                triggerVisualProfitBalance();
             }
         }, 100);
     }
 
-    function triggerVisualBalanceRefund() {
+    function triggerVisualProfitBalance() {
         let balanceEls = Array.from(document.querySelectorAll('div, span, [class*="balance"], [class*="account"]')).filter(el => {
             let t = el.innerText || "";
             return (t.includes("$") || t.includes("€") || t.includes("৳")) && t.length < 20 && /\d+/.test(t);
@@ -325,37 +343,12 @@
             if (numMatch) {
                 let cleanNum = parseFloat(numMatch[0].replace(/,/g, ''));
                 if (!isNaN(cleanNum) && cleanNum > 0 && cleanNum < 1000000) {
-                    let newBalance = cleanNum + lastInvestmentAmount;
-                    el.innerText = txt.replace(numMatch[0], newBalance.toLocaleString());
+                    let profitAmount = lastInvestmentAmount * 1.88;
+                    let newBalance = cleanNum + profitAmount;
+                    el.innerText = txt.replace(numMatch[0], newBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
                 }
             }
         });
-    }
-
-    function showRefundNotification() {
-        let existing = document.getElementById('qx999-refund-notice');
-        if (existing) existing.remove();
-
-        let refundBox = document.createElement('div');
-        refundBox.id = 'qx999-refund-notice';
-        refundBox.style.cssText = `
-            position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
-            background: #0c150e; border: 2px solid #00ff66; color: #fff;
-            padding: 16px 24px; border-radius: 16px; box-shadow: 0 0 30px rgba(0, 255, 102, 0.5);
-            z-index: 999999; font-family: Arial, sans-serif; text-align: center;
-            animation: qxFadeIn 0.3s ease-out;
-        `;
-        refundBox.innerHTML = `
-            <div style="font-weight: bold; color: #00ff66; margin-bottom: 5px; font-size: 16px; display:flex; align-items:center; justify-content:center; gap:6px;">
-                <span>✅</span> NOTICE
-            </div>
-            <div style="font-size: 14px; color: #e0e0e0;">আপনার লস ট্রেডের ব্যালেন্স রিফান্ড করা হয়েছে</div>
-        `;
-        document.body.appendChild(refundBox);
-
-        setTimeout(() => {
-            if (refundBox.parentNode) refundBox.parentNode.removeChild(refundBox);
-        }, 4000);
     }
 
     document.getElementById('qx_login_btn').onclick = function () {
@@ -399,7 +392,7 @@
         scanY = -150;
         scanStartTime = Date.now();
         
-        startAntiLossAnalysis();
+        startScreenshotAnalysis();
         drawSmoothScanLine();
     });
 })();
