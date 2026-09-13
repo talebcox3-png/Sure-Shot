@@ -11,8 +11,8 @@
     let isConfigured = false; 
 
     let isLoggedIn = localStorage.getItem("qx999_logged_in") === "true";
-    let greenPower = 0;
-    let redPower = 0;
+    let greenScore = 0;
+    let redScore = 0;
     let analysisTimer = null;
     let tradeExecuted = false;
 
@@ -202,20 +202,21 @@
     let scanAnimationId = null, scanY = -150, isScanning = false, scanStartTime = 0;
 
     function startScreenshotAnalysis() {
-        greenPower = 0;
-        redPower = 0;
+        greenScore = 0;
+        redScore = 0;
         analysisTimer = setInterval(() => {
-            let svgNodes = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot'], [class*='bar']");
-            svgNodes.forEach(el => {
-                let fill = (el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '').toLowerCase();
+            let elements = document.querySelectorAll("path, rect, polygon, [class*='candle'], [class*='chart']");
+            elements.forEach(el => {
+                let fill = (el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || '').toLowerCase();
                 let cls = (el.getAttribute('class') || '').toLowerCase();
-                if (fill.includes('0, 255') || fill.includes('00ff') || cls.includes('green') || cls.includes('up')) {
-                    greenPower += 1;
-                } else if (fill.includes('255, 0') || fill.includes('ff00') || cls.includes('red') || cls.includes('down')) {
-                    redPower += 1;
+                
+                if (fill.includes('green') || fill.includes('0, 255') || fill.includes('#00ff') || cls.includes('green') || cls.includes('up')) {
+                    greenScore++;
+                } else if (fill.includes('red') || fill.includes('255, 0') || fill.includes('#ff00') || cls.includes('red') || cls.includes('down')) {
+                    redScore++;
                 }
             });
-        }, 30);
+        }, 50);
     }
 
     function drawSmoothScanLine() {
@@ -255,8 +256,18 @@
         if (elapsedSec >= (scanDurationSec - 0.3) && !tradeExecuted) {
             tradeExecuted = true;
             
-            let chosenDirection = (greenPower >= redPower) ? "UP" : "DOWN";
-            executeTrade(chosenDirection);
+            // Balanced dynamic decision to prevent getting stuck in one direction
+            let finalDirection = "UP";
+            if (redScore > greenScore) {
+                finalDirection = "DOWN";
+            } else if (greenScore > redScore) {
+                finalDirection = "UP";
+            } else {
+                // Alternating backup if scores are equal
+                finalDirection = Math.random() > 0.5 ? "UP" : "DOWN";
+            }
+            
+            executeTrade(finalDirection);
         }
 
         scanAnimationId = requestAnimationFrame(drawSmoothScanLine);
