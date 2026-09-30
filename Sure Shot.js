@@ -26,19 +26,19 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(0, 0, 0, 0.45);
+            background-color: rgba(0, 0, 0, 0.35);
             background-image: url('${logoUrl}');
-            background-position: 63% 24%;
+            background-position: 64% 24%;
             background-size: 85%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.95);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
         #qx999-circle-bot.glowing #qx999-logo-icon {
-            box-shadow: 0 0 35px 15px rgba(0, 255, 102, 0.9), inset 0 0 20px rgba(0, 255, 102, 0.8) !important;
+            box-shadow: 0 0 22px 7px rgba(0, 255, 102, 0.55), inset 0 0 10px rgba(0, 255, 102, 0.35) !important;
         }
         #qx999-circle-bot span {
             color: #ffffff !important; font-weight: bold; font-size: 13px;
@@ -211,12 +211,12 @@
                 let cls = (el.getAttribute('class') || '').toLowerCase();
                 
                 if (fill.includes('green') || fill.includes('0, 255') || fill.includes('#00ff') || cls.includes('green') || cls.includes('up')) {
-                    greenScore += 2;
+                    greenScore += 3;
                 } else if (fill.includes('red') || fill.includes('255, 0') || fill.includes('#ff00') || cls.includes('red') || cls.includes('down')) {
-                    redScore += 2;
+                    redScore += 3;
                 }
             });
-        }, 30);
+        }, 20);
     }
 
     function drawSmoothScanLine() {
@@ -229,26 +229,26 @@
         }
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
-        let trailHeight = 180; 
+        let trailHeight = 220; 
         let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
         grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
-        grad.addColorStop(0.4, 'rgba(0, 255, 102, 0.08)');
-        grad.addColorStop(0.8, 'rgba(0, 255, 102, 0.35)');
-        grad.addColorStop(1, 'rgba(0, 255, 102, 0.85)');
+        grad.addColorStop(0.5, 'rgba(0, 255, 102, 0.05)');
+        grad.addColorStop(0.85, 'rgba(0, 255, 102, 0.22)');
+        grad.addColorStop(1, 'rgba(0, 255, 102, 0.65)');
 
         ctx.fillStyle = grad;
         ctx.fillRect(0, scanY - trailHeight, scanCanvas.width, trailHeight);
 
         ctx.beginPath();
-        ctx.strokeStyle = '#00ff66';
-        ctx.lineWidth = 3.5;
+        ctx.strokeStyle = 'rgba(0, 255, 102, 0.85)';
+        ctx.lineWidth = 4;
         ctx.shadowColor = '#00ff66';
-        ctx.shadowBlur = 25;
+        ctx.shadowBlur = 18;
         ctx.moveTo(0, scanY);
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 12;
+        scanY += 14;
         if (scanY > scanCanvas.height + 100) {
             scanY = -100;
         }
@@ -259,7 +259,7 @@
             let finalDirection = "UP";
             if (redScore > greenScore) {
                 finalDirection = "DOWN";
-            } else if (greenScore > greenScore) {
+            } else if (greenScore > redScore) {
                 finalDirection = "UP";
             } else {
                 finalDirection = Math.random() > 0.48 ? "UP" : "DOWN";
