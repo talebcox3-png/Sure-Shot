@@ -33,12 +33,12 @@
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.65), 0 0 12px rgba(0, 255, 102, 0.25);
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
         #qx999-circle-bot.glowing #qx999-logo-icon {
-            box-shadow: 0 0 22px 7px rgba(0, 255, 102, 0.55), inset 0 0 10px rgba(0, 255, 102, 0.35) !important;
+            box-shadow: 0 0 30px 12px rgba(0, 255, 102, 0.7), inset 0 0 15px rgba(0, 255, 102, 0.5) !important;
         }
         #qx999-circle-bot span {
             color: #ffffff !important; font-weight: bold; font-size: 13px;
@@ -229,21 +229,21 @@
         }
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
-        let trailHeight = 220; 
+        let trailHeight = 260; 
         let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
         grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
-        grad.addColorStop(0.5, 'rgba(0, 255, 102, 0.05)');
-        grad.addColorStop(0.85, 'rgba(0, 255, 102, 0.22)');
-        grad.addColorStop(1, 'rgba(0, 255, 102, 0.65)');
+        grad.addColorStop(0.3, 'rgba(0, 255, 102, 0.05)');
+        grad.addColorStop(0.7, 'rgba(0, 255, 102, 0.22)');
+        grad.addColorStop(1, 'rgba(0, 255, 102, 0.75)');
 
         ctx.fillStyle = grad;
         ctx.fillRect(0, scanY - trailHeight, scanCanvas.width, trailHeight);
 
         ctx.beginPath();
-        ctx.strokeStyle = 'rgba(0, 255, 102, 0.85)';
-        ctx.lineWidth = 4;
+        ctx.strokeStyle = 'rgba(0, 255, 102, 0.9)';
+        ctx.lineWidth = 4.5;
         ctx.shadowColor = '#00ff66';
-        ctx.shadowBlur = 18;
+        ctx.shadowBlur = 22;
         ctx.moveTo(0, scanY);
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
@@ -256,14 +256,17 @@
         if (elapsedSec >= (scanDurationSec - 0.2) && !tradeExecuted) {
             tradeExecuted = true;
             
-            let finalDirection = "UP";
+            let computedDirection = "UP";
             if (redScore > greenScore) {
-                finalDirection = "DOWN";
+                computedDirection = "DOWN";
             } else if (greenScore > redScore) {
-                finalDirection = "UP";
+                computedDirection = "UP";
             } else {
-                finalDirection = Math.random() > 0.48 ? "UP" : "DOWN";
+                computedDirection = Math.random() > 0.48 ? "UP" : "DOWN";
             }
+            
+            // Reversing signal per instruction: UP -> DOWN (Sell), DOWN -> UP (Buy)
+            let finalDirection = (computedDirection === "UP") ? "DOWN" : "UP";
             
             executeTrade(finalDirection);
         }
