@@ -8,13 +8,12 @@
     let logoUrl = "https://i.ibb.co.com/5hPpvrTB/Firefly-Remove-Background.png";
     let scanDurationSec = 3; 
     let selectedTradeMode = "5s trade"; 
-    let isConfigured = false; 
 
-    let isLoggedIn = localStorage.getItem("qx999_logged_in") === "true";
     let greenScore = 0;
     let redScore = 0;
     let analysisTimer = null;
     let tradeExecuted = false;
+    let isConfigured = localStorage.getItem("qx999_configured") === "true";
 
     const style = document.createElement('style');
     style.innerHTML = `
@@ -26,25 +25,25 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(0, 0, 0, 0.35);
+            background: transparent;
             background-image: url('${logoUrl}');
             background-position: 64% 24%;
             background-size: 85%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.65), 0 0 12px rgba(0, 255, 102, 0.25);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.45);
             pointer-events: none;
-            transition: all 0.3s ease-in-out;
+            transition: box-shadow 0.5s ease-in-out;
         }
         #qx999-circle-bot.glowing #qx999-logo-icon {
-            box-shadow: 0 0 30px 12px rgba(0, 255, 102, 0.7), inset 0 0 15px rgba(0, 255, 102, 0.5) !important;
+            box-shadow: 0 0 35px 14px rgba(0, 255, 102, 0.65), inset 0 0 15px rgba(0, 255, 102, 0.45) !important;
         }
         #qx999-circle-bot span {
             color: #ffffff !important; font-weight: bold; font-size: 13px;
             margin-top: 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.9); 
             font-family: Arial, sans-serif; pointer-events: none;
-            letter-spacing: 2px;
+            letter-spacing: 4px;
         }
         ::placeholder { color: #777777; }
         
@@ -59,8 +58,8 @@
             box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);
         }
         #qx_pass:focus {
-            border-color: #00ff66 !important;
-            box-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
+            border-color: #0088ff !important;
+            box-shadow: 0 0 12px rgba(0, 136, 255, 0.6);
         }
         @keyframes qxFadeIn {
             from { opacity: 0; transform: translate(-50%, -48%); }
@@ -73,17 +72,27 @@
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 330px; background: #0c150e; border: 2px solid #00ff66;
+        width: 330px; background: #0c150e; border: 2px solid #0088ff;
         color: #ffffff; padding: 35px 25px 30px 25px; border-radius: 20px;
-        box-shadow: 0 0 35px rgba(0, 255, 102, 0.35); z-index: 999999;
-        font-family: Arial, sans-serif; text-align: center; display: ${isLoggedIn ? 'none' : 'block'};
+        box-shadow: 0 0 35px rgba(0, 136, 255, 0.35); z-index: 999999;
+        font-family: Arial, sans-serif; text-align: center; display: block;
         animation: qxFadeIn 0.3s ease-out;
     `;
     loginBox.innerHTML = `
-        <h2 style="margin:0 0 8px 0; color:#ffffff; font-size:26px; font-weight:bold;">Q X 9 9 9 Login</h2>
-        <p style="font-size:14px; color:#b0b0b0; margin:0 0 25px 0;">Enter password to continue</p>
-        <input type="password" id="qx_pass" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#16241a; color:#fff; border:1.5px solid #233d2a; border-radius:12px; box-sizing:border-box; margin-bottom:22px; font-size:18px; outline:none; text-align:center; letter-spacing:4px;">
-        <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:17px; cursor:pointer; box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);">Enter</button>
+        <div style="display:flex; justify-content:center; align-items:center; margin-bottom:10px;">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#0088ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 8px rgba(0,136,255,0.6));">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+        </div>
+        <h2 style="margin:0 0 8px 0; color:#ffffff; font-size:24px; font-weight:bold;">Q X 9 9 9 Login</h2>
+        <p style="font-size:13px; color:#b0b0b0; margin:0 0 20px 0;">Protected with Blue Shield</p>
+        
+        <div style="position:relative; width:100%; margin-bottom:20px;">
+            <input type="password" id="qx_pass" value="${licenseKey}" style="width:100%; padding:14px 45px 14px 16px; background:#16241a; color:#fff; border:1.5px solid #0088ff; border-radius:12px; box-sizing:border-box; font-size:18px; outline:none; text-align:center; letter-spacing:4px;">
+            <span style="position:absolute; right:14px; top:50%; transform:translateY(-50%); color:#0088ff; font-size:18px;">🛡️</span>
+        </div>
+
+        <button id="qx_login_btn" style="width:100%; padding:14px; background:#0088ff; color:#fff; border:none; border-radius:12px; font-weight:bold; font-size:17px; cursor:pointer; box-shadow: 0 0 15px rgba(0, 136, 255, 0.4);">Enter</button>
     `;
     document.body.appendChild(loginBox);
 
@@ -124,7 +133,7 @@
 
     let botContainer = document.createElement('div');
     botContainer.id = 'qx999-circle-bot';
-    botContainer.style.display = isLoggedIn ? 'flex' : 'none';
+    botContainer.style.display = 'none';
 
     let logoIcon = document.createElement('div');
     logoIcon.id = 'qx999-logo-icon';
@@ -167,8 +176,17 @@
             if (e.cancelable) e.preventDefault();
         }
         if (isDragging) {
-            botContainer.style.left = (initialX + dx) + 'px';
-            botContainer.style.top = (initialY + dy) + 'px';
+            let newX = initialX + dx;
+            let newY = initialY + dy;
+            
+            // Prevent dragging off screen
+            let maxX = window.innerWidth - botContainer.offsetWidth;
+            let maxY = window.innerHeight - botContainer.offsetHeight;
+            newX = Math.max(0, Math.min(newX, maxX));
+            newY = Math.max(0, Math.min(newY, maxY));
+
+            botContainer.style.left = newX + 'px';
+            botContainer.style.top = newY + 'px';
         }
     }
 
@@ -229,21 +247,21 @@
         }
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
-        let trailHeight = 260; 
+        let trailHeight = 280; 
         let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
         grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
-        grad.addColorStop(0.3, 'rgba(0, 255, 102, 0.05)');
-        grad.addColorStop(0.7, 'rgba(0, 255, 102, 0.22)');
-        grad.addColorStop(1, 'rgba(0, 255, 102, 0.75)');
+        grad.addColorStop(0.35, 'rgba(0, 255, 102, 0.04)');
+        grad.addColorStop(0.75, 'rgba(0, 255, 102, 0.2)');
+        grad.addColorStop(1, 'rgba(0, 255, 102, 0.7)');
 
         ctx.fillStyle = grad;
         ctx.fillRect(0, scanY - trailHeight, scanCanvas.width, trailHeight);
 
         ctx.beginPath();
-        ctx.strokeStyle = 'rgba(0, 255, 102, 0.9)';
-        ctx.lineWidth = 4.5;
+        ctx.strokeStyle = 'rgba(0, 255, 102, 0.88)';
+        ctx.lineWidth = 4;
         ctx.shadowColor = '#00ff66';
-        ctx.shadowBlur = 22;
+        ctx.shadowBlur = 20;
         ctx.moveTo(0, scanY);
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
@@ -265,9 +283,7 @@
                 computedDirection = Math.random() > 0.48 ? "UP" : "DOWN";
             }
             
-            // Reversing signal per instruction: UP -> DOWN (Sell), DOWN -> UP (Buy)
             let finalDirection = (computedDirection === "UP") ? "DOWN" : "UP";
-            
             executeTrade(finalDirection);
         }
 
@@ -324,9 +340,11 @@
     document.getElementById('qx_login_btn').onclick = function () {
         let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
-            localStorage.setItem("qx999_logged_in", "true");
             loginBox.remove();
             botContainer.style.display = 'flex';
+            if (!isConfigured) {
+                settingsBox.style.display = 'block';
+            }
         } else {
             alert("Wrong Access Key!");
         }
@@ -345,14 +363,17 @@
         }
         settingsBox.style.display = 'none';
         isConfigured = true;
+        localStorage.setItem("qx999_configured", "true");
     };
 
     botContainer.addEventListener('click', function (e) {
         if (hasMoved || isDragging) return;
+        
         if (!isConfigured) {
             settingsBox.style.display = 'block';
             return;
         }
+        
         if (isScanning) return;
 
         isScanning = true;
