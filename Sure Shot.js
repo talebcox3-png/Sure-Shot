@@ -31,19 +31,19 @@
             background-size: 85%;
             background-repeat: no-repeat;
             border-radius: 50%;
-            border: none;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
             pointer-events: none;
             transition: box-shadow 0.5s ease-in-out;
         }
         #qx999-circle-bot.glowing #qx999-logo-icon {
-            box-shadow: 0 0 35px 14px rgba(0, 255, 102, 0.65), inset 0 0 15px rgba(0, 255, 102, 0.45) !important;
+            box-shadow: 0 0 30px 10px rgba(0, 255, 102, 0.6), inset 0 0 12px rgba(0, 255, 102, 0.4) !important;
         }
         #qx999-circle-bot span {
             color: #ffffff !important; font-weight: bold; font-size: 13px;
             margin-top: 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.9); 
             font-family: Arial, sans-serif; pointer-events: none;
-            letter-spacing: 4px;
+            letter-spacing: normal;
         }
         ::placeholder { color: #777777; }
         
@@ -57,10 +57,6 @@
             background: #00ff66; color: #000; border-color: #00ff66;
             box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);
         }
-        #qx_pass:focus {
-            border-color: #0088ff !important;
-            box-shadow: 0 0 12px rgba(0, 136, 255, 0.6);
-        }
         @keyframes qxFadeIn {
             from { opacity: 0; transform: translate(-50%, -48%); }
             to { opacity: 1; transform: translate(-50%, -50%); }
@@ -72,27 +68,24 @@
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 330px; background: #0c150e; border: 2px solid #0088ff;
+        width: 330px; background: #0c150e; border: 2px solid #00ff66;
         color: #ffffff; padding: 35px 25px 30px 25px; border-radius: 20px;
-        box-shadow: 0 0 35px rgba(0, 136, 255, 0.35); z-index: 999999;
+        box-shadow: 0 0 35px rgba(0, 255, 102, 0.35); z-index: 999999;
         font-family: Arial, sans-serif; text-align: center; display: block;
         animation: qxFadeIn 0.3s ease-out;
     `;
     loginBox.innerHTML = `
-        <div style="display:flex; justify-content:center; align-items:center; margin-bottom:10px;">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#0088ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 8px rgba(0,136,255,0.6));">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            </svg>
-        </div>
-        <h2 style="margin:0 0 8px 0; color:#ffffff; font-size:24px; font-weight:bold;">Q X 9 9 9 Login</h2>
-        <p style="font-size:13px; color:#b0b0b0; margin:0 0 20px 0;">Protected with Blue Shield</p>
+        <h2 style="margin:0 0 8px 0; color:#00ff66; font-size:24px; font-weight:bold;">QX999 Login</h2>
+        <p style="font-size:13px; color:#b0b0b0; margin:0 0 22px 0;">Enter password to continue</p>
         
-        <div style="position:relative; width:100%; margin-bottom:20px;">
-            <input type="password" id="qx_pass" value="${licenseKey}" style="width:100%; padding:14px 45px 14px 16px; background:#16241a; color:#fff; border:1.5px solid #0088ff; border-radius:12px; box-sizing:border-box; font-size:18px; outline:none; text-align:center; letter-spacing:4px;">
-            <span style="position:absolute; right:14px; top:50%; transform:translateY(-50%); color:#0088ff; font-size:18px;">🛡️</span>
+        <div style="position:relative; width:100%; margin-bottom:22px; background:#16241a; border:1.5px solid #00ff66; border-radius:12px; padding:12px 16px; display:flex; align-items:center; box-sizing:border-box;">
+            <div style="background:#0088ff; padding:4px 10px; border-radius:6px; display:inline-flex; align-items:center; color:#ffffff; letter-spacing:4px; font-size:18px; user-select:none; box-shadow: 0 0 6px rgba(0,136,255,0.4);">
+                ••••••••
+            </div>
+            <input type="password" id="qx_pass" value="${licenseKey}" style="position:absolute; opacity:0; width:100%; height:100%; top:0; left:0; cursor:pointer;" />
         </div>
 
-        <button id="qx_login_btn" style="width:100%; padding:14px; background:#0088ff; color:#fff; border:none; border-radius:12px; font-weight:bold; font-size:17px; cursor:pointer; box-shadow: 0 0 15px rgba(0, 136, 255, 0.4);">Enter</button>
+        <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:17px; cursor:pointer; box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);">Enter</button>
     `;
     document.body.appendChild(loginBox);
 
@@ -106,7 +99,7 @@
         font-family: Arial, sans-serif; display: none; max-height: 90vh; overflow-y: auto;
     `;
     settingsBox.innerHTML = `
-        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:20px; text-align:center; font-weight:bold;">Q X 9 9 9 Settings</h3>
+        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:20px; text-align:center; font-weight:bold;">QX999 Settings</h3>
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Scan delay (seconds)</label>
         <input type="number" id="qx_delay" value="3" min="2" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:15px; outline:none; font-size:16px;">
         <label style="font-size:13px; color:#ccc; display:block; margin-bottom:8px;">Trade duration mode</label>
@@ -138,7 +131,7 @@
     let logoIcon = document.createElement('div');
     logoIcon.id = 'qx999-logo-icon';
     let logoText = document.createElement('span');
-    logoText.innerText = "Q X 9 9 9";
+    logoText.innerText = "QX999";
 
     botContainer.appendChild(logoIcon);
     botContainer.appendChild(logoText);
@@ -178,8 +171,6 @@
         if (isDragging) {
             let newX = initialX + dx;
             let newY = initialY + dy;
-            
-            // Prevent dragging off screen
             let maxX = window.innerWidth - botContainer.offsetWidth;
             let maxY = window.innerHeight - botContainer.offsetHeight;
             newX = Math.max(0, Math.min(newX, maxX));
@@ -338,21 +329,10 @@
     }
 
     document.getElementById('qx_login_btn').onclick = function () {
-        let inputPass = document.getElementById('qx_pass').value;
-        if (inputPass === licenseKey) {
-            loginBox.remove();
-            botContainer.style.display = 'flex';
-            if (!isConfigured) {
-                settingsBox.style.display = 'block';
-            }
-        } else {
-            alert("Wrong Access Key!");
-        }
-    };
-
-    document.getElementById('qx_pass').onkeydown = function (e) {
-        if (e.key === 'Enter') {
-            document.getElementById('qx_login_btn').click();
+        loginBox.remove();
+        botContainer.style.display = 'flex';
+        if (!isConfigured) {
+            settingsBox.style.display = 'block';
         }
     };
 
