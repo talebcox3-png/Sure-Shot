@@ -4,15 +4,15 @@
         if (el) el.remove();
     });
 
-    let licenseKey = "ALVI5S-KINGQX";
+    let licenseKey = "Alvi1234";
     let logoUrl = "https://i.ibb.co.com/5hPpvrTB/Firefly-Remove-Background.png";
-    let scanDurationSec = 5; 
-    let selectedTradeMode = localStorage.getItem("qx999_mode") || "RANDOM"; 
+    let scanDurationSec = 3; 
+    let selectedTradeMode = "5s trade"; 
+    let isConfigured = false; 
 
     let isLoggedIn = localStorage.getItem("qx999_logged_in") === "true";
-    let savedPass = localStorage.getItem("qx999_saved_pass") || "";
-    let greenPower = 0;
-    let redPower = 0;
+    let greenScore = 0;
+    let redScore = 0;
     let analysisTimer = null;
     let tradeExecuted = false;
 
@@ -26,24 +26,25 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(0, 0, 0, 0.35);
+            background-color: rgba(0, 0, 0, 0.7);
             background-image: url('${logoUrl}');
-            background-position: 58% center;
+            background-position: 62% 24%;
             background-size: 85%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.95);
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
         #qx999-circle-bot.glowing #qx999-logo-icon {
-            box-shadow: 0 0 50px 18px rgba(0, 255, 102, 0.85), 0 20px 60px rgba(0, 255, 102, 0.6) !important;
-            transform: none !important;
+            box-shadow: 0 0 50px 22px rgba(0, 255, 102, 1), inset 0 0 30px rgba(0, 255, 102, 0.95) !important;
         }
         #qx999-circle-bot span {
             color: #ffffff !important; font-weight: bold; font-size: 13px;
-            margin-top: 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.9); font-family: Arial, sans-serif; pointer-events: none;
+            margin-top: 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.9); 
+            font-family: Arial, sans-serif; pointer-events: none;
+            letter-spacing: 2px;
         }
         ::placeholder { color: #777777; }
         
@@ -57,33 +58,35 @@
             background: #00ff66; color: #000; border-color: #00ff66;
             box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);
         }
-
         #qx_pass:focus {
             border-color: #00ff66 !important;
             box-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
         }
+        @keyframes qxFadeIn {
+            from { opacity: 0; transform: translate(-50%, -48%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
     `;
     document.head.appendChild(style);
 
-    // Login Box (Shield blueish style input as requested)
     let loginBox = document.createElement('div');
     loginBox.id = 'qx999-login';
     loginBox.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 330px; background: #0c150e; border: 1.5px solid #00ff66;
-        color: #ffffff; padding: 35px 24px 30px 24px; border-radius: 24px;
-        box-shadow: 0 0 25px rgba(0, 255, 102, 0.25); z-index: 999999;
-        font-family: sans-serif; text-align: center; display: none;
+        width: 330px; background: #0c150e; border: 2px solid #00ff66;
+        color: #ffffff; padding: 35px 25px 30px 25px; border-radius: 20px;
+        box-shadow: 0 0 35px rgba(0, 255, 102, 0.35); z-index: 999999;
+        font-family: Arial, sans-serif; text-align: center; display: ${isLoggedIn ? 'none' : 'block'};
+        animation: qxFadeIn 0.3s ease-out;
     `;
     loginBox.innerHTML = `
-        <h3 style="margin:0 0 6px 0; color:#00ff66; font-size:24px; font-weight:500;">QX999 Login</h3>
-        <p style="font-size:14px; color:#cccccc; margin:0 0 25px 0;">Enter password to continue</p>
-        <input type="password" id="qx_pass" value="${savedPass}" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#0a192f; color:#fff; border:1px solid #00ff66; border-radius:12px; box-sizing:border-box; margin-bottom:20px; font-size:18px; outline:none; letter-spacing:3px; box-shadow: inset 0 0 10px rgba(0, 140, 255, 0.3);">
-        <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:600; font-size:17px; cursor:pointer; box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);">Enter</button>
+        <h2 style="margin:0 0 8px 0; color:#ffffff; font-size:26px; font-weight:bold;">Q X 9 9 9 Login</h2>
+        <p style="font-size:14px; color:#b0b0b0; margin:0 0 25px 0;">Enter password to continue</p>
+        <input type="password" id="qx_pass" placeholder="••••••••" style="width:100%; padding:14px 16px; background:#16241a; color:#fff; border:1.5px solid #233d2a; border-radius:12px; box-sizing:border-box; margin-bottom:22px; font-size:18px; outline:none; text-align:center; letter-spacing:4px;">
+        <button id="qx_login_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:17px; cursor:pointer; box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);">Enter</button>
     `;
     document.body.appendChild(loginBox);
 
-    // Settings Box with BUY, SELL, RANDOM modes
     let settingsBox = document.createElement('div');
     settingsBox.id = 'qx999-settings';
     settingsBox.style.cssText = `
@@ -94,43 +97,44 @@
         font-family: Arial, sans-serif; display: none; max-height: 90vh; overflow-y: auto;
     `;
     settingsBox.innerHTML = `
-        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:20px; text-align:center; font-weight:bold;">QX999 Settings</h3>
-        
-        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:8px;">Select Trade Mode</label>
-        <div id="qx_mode_buy" class="qx-mode-btn ${selectedTradeMode === 'BUY' ? 'active' : ''}">BUY</div>
-        <div id="qx_mode_sell" class="qx-mode-btn ${selectedTradeMode === 'SELL' ? 'active' : ''}">SELL</div>
-        <div id="qx_mode_random" class="qx-mode-btn ${selectedTradeMode === 'RANDOM' ? 'active' : ''}">RANDOM (Auto 5s)</div>
-        
-        <button id="qx_save_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; margin-top:15px; box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);">Save & Run</button>
+        <h3 style="margin:0 0 15px 0; color:#00ff66; font-size:20px; text-align:center; font-weight:bold;">Q X 9 9 9 Settings</h3>
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:5px;">Scan delay (seconds)</label>
+        <input type="number" id="qx_delay" value="3" min="2" style="width:100%; padding:12px; background:#070d09; color:#fff; border:1px solid #1a3322; border-radius:12px; box-sizing:border-box; margin-bottom:15px; outline:none; font-size:16px;">
+        <label style="font-size:13px; color:#ccc; display:block; margin-bottom:8px;">Trade duration mode</label>
+        <div id="qx_mode_1m" class="qx-mode-btn">1m trade</div>
+        <div id="qx_mode_10s" class="qx-mode-btn">10s trade</div>
+        <div id="qx_mode_5s" class="qx-mode-btn active">5s trade</div>
+        <button id="qx_save_btn" style="width:100%; padding:14px; background:#00ff66; color:#000; border:none; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; margin-top:10px; box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);">Save</button>
     `;
     document.body.appendChild(settingsBox);
 
-    // Mode selection handlers
-    ['BUY', 'SELL', 'RANDOM'].forEach(m => {
-        let btnId = m === 'BUY' ? 'qx_mode_buy' : (m === 'SELL' ? 'qx_mode_sell' : 'qx_mode_random');
+    let modeBtns = ['1m trade', '10s trade', '5s trade'];
+    modeBtns.forEach(m => {
+        let btnId = m === '1m trade' ? 'qx_mode_1m' : (m === '10s trade' ? 'qx_mode_10s' : 'qx_mode_5s');
         document.getElementById(btnId).onclick = function () {
             document.querySelectorAll('.qx-mode-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             selectedTradeMode = m;
-            localStorage.setItem("qx999_mode", m);
+            if (m === '5s trade') scanDurationSec = 3;
+            else if (m === '10s trade') scanDurationSec = 4;
+            else scanDurationSec = 5;
+            document.getElementById('qx_delay').value = scanDurationSec;
         };
     });
 
-    // Circular Bot Container
     let botContainer = document.createElement('div');
     botContainer.id = 'qx999-circle-bot';
-    botContainer.style.display = 'flex'; // Always visible on search/inject
+    botContainer.style.display = isLoggedIn ? 'flex' : 'none';
 
     let logoIcon = document.createElement('div');
     logoIcon.id = 'qx999-logo-icon';
     let logoText = document.createElement('span');
-    logoText.innerText = "QX999";
+    logoText.innerText = "Q X 9 9 9";
 
     botContainer.appendChild(logoIcon);
     botContainer.appendChild(logoText);
     document.body.appendChild(botContainer);
 
-    // Dragging Logic
     let isDragging = false, hasMoved = false;
     let startX = 0, startY = 0, initialX = 0, initialY = 0;
 
@@ -179,7 +183,6 @@
     botContainer.addEventListener('mousedown', dragStart);
     botContainer.addEventListener('touchstart', dragStart, { passive: false });
 
-    // Scan Canvas Animation
     let scanCanvas = document.createElement('canvas');
     scanCanvas.id = 'qx999-scan-canvas';
     scanCanvas.style.cssText = `
@@ -197,42 +200,23 @@
     window.addEventListener('resize', resizeCanvas);
 
     let scanAnimationId = null, scanY = -150, isScanning = false, scanStartTime = 0;
-    let priceHistory = [];
 
-    function startMarketAnalysis() {
-        greenPower = 0;
-        redPower = 0;
-        priceHistory = [];
-
+    function startScreenshotAnalysis() {
+        greenScore = 0;
+        redScore = 0;
         analysisTimer = setInterval(() => {
-            let svgNodes = document.querySelectorAll("path, rect, [class*='candle'], [class*='plot'], [class*='bar']");
-            svgNodes.forEach(el => {
-                let fill = (el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || el.style.stroke || '').toLowerCase();
+            let elements = document.querySelectorAll("path, rect, polygon, [class*='candle'], [class*='chart']");
+            elements.forEach(el => {
+                let fill = (el.getAttribute('fill') || el.style.fill || el.getAttribute('stroke') || '').toLowerCase();
                 let cls = (el.getAttribute('class') || '').toLowerCase();
                 
-                if (fill.includes('0, 255') || fill.includes('00ff') || fill.includes('26a69a') || cls.includes('green') || cls.includes('up') || cls.includes('bull')) {
-                    greenPower += 20;
-                } else if (fill.includes('255, 0') || fill.includes('ff00') || fill.includes('ef5350') || cls.includes('red') || cls.includes('down') || cls.includes('bear')) {
-                    redPower += 20;
+                if (fill.includes('green') || fill.includes('0, 255') || fill.includes('#00ff') || cls.includes('green') || cls.includes('up')) {
+                    greenScore++;
+                } else if (fill.includes('red') || fill.includes('255, 0') || fill.includes('#ff00') || cls.includes('red') || cls.includes('down')) {
+                    redScore++;
                 }
             });
-
-            let prices = Array.from(document.querySelectorAll('span, div, [class*="price"]'))
-                .map(e => e.innerText ? e.innerText.trim() : '')
-                .filter(t => /^\d+\.\d+$/.test(t));
-
-            if (prices.length > 0) {
-                let currentVal = parseFloat(prices[prices.length - 1]);
-                priceHistory.push(currentVal);
-                if (priceHistory.length > 8) priceHistory.shift();
-
-                if (priceHistory.length >= 3) {
-                    let recentDiff = priceHistory[priceHistory.length - 1] - priceHistory[priceHistory.length - 3];
-                    if (recentDiff > 0) greenPower += 50; 
-                    else if (recentDiff < 0) redPower += 50;  
-                }
-            }
-        }, 15);
+        }, 50);
     }
 
     function drawSmoothScanLine() {
@@ -245,7 +229,6 @@
         }
 
         ctx.clearRect(0, 0, scanCanvas.width, scanCanvas.height);
-
         let trailHeight = 180; 
         let grad = ctx.createLinearGradient(0, scanY - trailHeight, 0, scanY);
         grad.addColorStop(0, 'rgba(0, 255, 102, 0)');
@@ -265,24 +248,23 @@
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 8;
-        if (scanY > scanCanvas.height + 100) scanY = -100;
+        scanY += 10;
+        if (scanY > scanCanvas.height + 100) {
+            scanY = -100;
+        }
 
-        if (elapsedSec >= (scanDurationSec - 0.4) && !tradeExecuted) {
+        if (elapsedSec >= (scanDurationSec - 0.3) && !tradeExecuted) {
             tradeExecuted = true;
             
             let finalDirection = "UP";
-            if (selectedTradeMode === "BUY") {
-                finalDirection = "UP";
-            } else if (selectedTradeMode === "SELL") {
+            if (redScore > greenScore) {
                 finalDirection = "DOWN";
+            } else if (greenScore > redScore) {
+                finalDirection = "UP";
             } else {
-                // RANDOM Mode Analysis
-                if (greenPower > redPower) finalDirection = "UP";
-                else if (redPower > greenPower) finalDirection = "DOWN";
-                else finalDirection = priceHistory.length >= 2 && priceHistory[priceHistory.length - 1] >= priceHistory[0] ? "UP" : "DOWN";
+                finalDirection = Math.random() > 0.5 ? "UP" : "DOWN";
             }
-
+            
             executeTrade(finalDirection);
         }
 
@@ -301,64 +283,83 @@
     }
 
     function executeTrade(direction) {
-        let allElements = Array.from(document.querySelectorAll('button, div[role="button"], a, input[type="button"], div.button'));
+        let buttons = Array.from(document.querySelectorAll('button, div[role="button"], a'));
         let targetBtn = null;
 
-        if (direction === "UP") {
-            targetBtn = allElements.find(el => {
-                let text = (el.innerText || el.textContent || "").trim();
-                let cls = (el.className || "").toString().toLowerCase();
-                return text.includes("Up") || text.includes("Call") || text.includes("Higher") || text.includes("Buy") || text.includes("কল") || cls.includes("green") || cls.includes("call");
-            });
-        } else {
-            targetBtn = allElements.find(el => {
-                let text = (el.innerText || el.textContent || "").trim();
-                let cls = (el.className || "").toString().toLowerCase();
-                return text.includes("Down") || text.includes("Put") || text.includes("Lower") || text.includes("Sell") || text.includes("পুট") || cls.includes("red") || cls.includes("put");
-            });
+        for (let btn of buttons) {
+            let text = (btn.innerText || btn.textContent || "").trim().toLowerCase();
+            let cls = (btn.className || "").toString().toLowerCase();
+            
+            if (direction === "UP") {
+                if (text === "up" || text.includes("call") || text.includes("higher") || cls.includes("call") || cls.includes("success") || cls.includes("green")) {
+                    targetBtn = btn;
+                    break;
+                }
+            } else {
+                if (text === "down" || text.includes("put") || text.includes("lower") || cls.includes("put") || cls.includes("danger") || cls.includes("red")) {
+                    targetBtn = btn;
+                    break;
+                }
+            }
         }
 
-        if (targetBtn) targetBtn.click();
+        if (!targetBtn) {
+            let allBtns = buttons.filter(b => {
+                let t = (b.innerText || "").trim().toLowerCase();
+                return t === "up" || t === "down" || t.includes("call") || t.includes("put");
+            });
+            if (allBtns.length >= 2) {
+                targetBtn = direction === "UP" ? allBtns[0] : allBtns[1];
+            }
+        }
+
+        if (targetBtn) {
+            targetBtn.click();
+        }
     }
 
-    // Login Action
     document.getElementById('qx_login_btn').onclick = function () {
         let inputPass = document.getElementById('qx_pass').value;
         if (inputPass === licenseKey) {
             localStorage.setItem("qx999_logged_in", "true");
-            localStorage.setItem("qx999_saved_pass", inputPass);
-            loginBox.style.display = 'none';
-            settingsBox.style.display = 'block';
+            loginBox.remove();
+            botContainer.style.display = 'flex';
         } else {
             alert("Wrong Access Key!");
         }
     };
 
     document.getElementById('qx_pass').onkeydown = function (e) {
-        if (e.key === 'Enter') document.getElementById('qx_login_btn').click();
+        if (e.key === 'Enter') {
+            document.getElementById('qx_login_btn').click();
+        }
     };
 
-    // Settings Save Action
     document.getElementById('qx_save_btn').onclick = function () {
+        let delayInput = parseFloat(document.getElementById('qx_delay').value);
+        if (!isNaN(delayInput) && delayInput >= 2) {
+            scanDurationSec = delayInput;
+        }
         settingsBox.style.display = 'none';
+        isConfigured = true;
     };
 
-    // Bot Click Behavior
     botContainer.addEventListener('click', function (e) {
         if (hasMoved || isDragging) return;
-
-        let checkLogin = localStorage.getItem("qx999_logged_in") === "true";
-        if (!checkLogin) {
-            loginBox.style.display = 'block';
-            return;
-        }
-
-        // If logged in, clicking the bot opens settings
-        if (settingsBox.style.display === 'block') {
-            settingsBox.style.display = 'none';
-            return;
-        } else {
+        if (!isConfigured) {
             settingsBox.style.display = 'block';
+            return;
         }
+        if (isScanning) return;
+
+        isScanning = true;
+        tradeExecuted = false;
+        botContainer.classList.add('glowing');
+        scanCanvas.style.display = 'block';
+        scanY = -150;
+        scanStartTime = Date.now();
+        
+        startScreenshotAnalysis();
+        drawSmoothScanLine();
     });
 })();
