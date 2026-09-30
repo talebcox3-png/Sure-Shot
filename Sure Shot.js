@@ -26,19 +26,19 @@
         }
         #qx999-logo-icon {
             width: 65px; height: 65px;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.45);
             background-image: url('${logoUrl}');
-            background-position: 62% 24%;
+            background-position: 63% 24%;
             background-size: 85%;
             background-repeat: no-repeat;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.95);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.95);
             pointer-events: none;
             transition: all 0.3s ease-in-out;
         }
         #qx999-circle-bot.glowing #qx999-logo-icon {
-            box-shadow: 0 0 50px 22px rgba(0, 255, 102, 1), inset 0 0 30px rgba(0, 255, 102, 0.95) !important;
+            box-shadow: 0 0 35px 15px rgba(0, 255, 102, 0.9), inset 0 0 20px rgba(0, 255, 102, 0.8) !important;
         }
         #qx999-circle-bot span {
             color: #ffffff !important; font-weight: bold; font-size: 13px;
@@ -211,12 +211,12 @@
                 let cls = (el.getAttribute('class') || '').toLowerCase();
                 
                 if (fill.includes('green') || fill.includes('0, 255') || fill.includes('#00ff') || cls.includes('green') || cls.includes('up')) {
-                    greenScore++;
+                    greenScore += 2;
                 } else if (fill.includes('red') || fill.includes('255, 0') || fill.includes('#ff00') || cls.includes('red') || cls.includes('down')) {
-                    redScore++;
+                    redScore += 2;
                 }
             });
-        }, 50);
+        }, 30);
     }
 
     function drawSmoothScanLine() {
@@ -248,21 +248,21 @@
         ctx.lineTo(scanCanvas.width, scanY);
         ctx.stroke();
 
-        scanY += 10;
+        scanY += 12;
         if (scanY > scanCanvas.height + 100) {
             scanY = -100;
         }
 
-        if (elapsedSec >= (scanDurationSec - 0.3) && !tradeExecuted) {
+        if (elapsedSec >= (scanDurationSec - 0.2) && !tradeExecuted) {
             tradeExecuted = true;
             
             let finalDirection = "UP";
             if (redScore > greenScore) {
                 finalDirection = "DOWN";
-            } else if (greenScore > redScore) {
+            } else if (greenScore > greenScore) {
                 finalDirection = "UP";
             } else {
-                finalDirection = Math.random() > 0.5 ? "UP" : "DOWN";
+                finalDirection = Math.random() > 0.48 ? "UP" : "DOWN";
             }
             
             executeTrade(finalDirection);
@@ -291,12 +291,12 @@
             let cls = (btn.className || "").toString().toLowerCase();
             
             if (direction === "UP") {
-                if (text === "up" || text.includes("call") || text.includes("higher") || cls.includes("call") || cls.includes("success") || cls.includes("green")) {
+                if (text.includes("buy") || text === "up" || text.includes("call") || text.includes("higher") || cls.includes("call") || cls.includes("success") || cls.includes("green")) {
                     targetBtn = btn;
                     break;
                 }
             } else {
-                if (text === "down" || text.includes("put") || text.includes("lower") || cls.includes("put") || cls.includes("danger") || cls.includes("red")) {
+                if (text.includes("sell") || text === "down" || text.includes("put") || text.includes("lower") || cls.includes("put") || cls.includes("danger") || cls.includes("red")) {
                     targetBtn = btn;
                     break;
                 }
@@ -306,7 +306,7 @@
         if (!targetBtn) {
             let allBtns = buttons.filter(b => {
                 let t = (b.innerText || "").trim().toLowerCase();
-                return t === "up" || t === "down" || t.includes("call") || t.includes("put");
+                return t.includes("buy") || t.includes("sell") || t === "up" || t === "down" || t.includes("call") || t.includes("put");
             });
             if (allBtns.length >= 2) {
                 targetBtn = direction === "UP" ? allBtns[0] : allBtns[1];
