@@ -32,7 +32,7 @@
             background-repeat: no-repeat;
             border-radius: 50%;
             border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.85);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.95), 0 2px 8px rgba(0, 0, 0, 0.9);
             pointer-events: none;
             transition: box-shadow 0.5s ease-in-out;
         }
