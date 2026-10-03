@@ -31,8 +31,8 @@
             background-size: 85%;
             background-repeat: no-repeat;
             border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.85);
             pointer-events: none;
             transition: box-shadow 0.5s ease-in-out;
         }
